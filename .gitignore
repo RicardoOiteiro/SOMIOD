@@ -1,0 +1,52 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.rsuser
+
+# Build
+bin/
+obj/
+out/
+[Aa]pp_Data/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+
+# ASP.NET / IIS
+*.mdf
+*.ldf
+*.db
+*.sqlite
+*.bak
+iisexpress/
+publish/
+*.Publish.xml
+*.pubxml
+*.pubxml.user
+
+# Sistema operativo / temporários
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+*.log
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Node (caso uses)
+node_modules/
+
+# Outros
+*.pfx
+*.dbmdl
+*.jfm
