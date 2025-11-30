@@ -14,12 +14,15 @@ namespace Somiod.Controllers
     {
         string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["SomiodSolution.Properties.Settings.ConnStr"].ConnectionString;
 
-        [Route("")]
+        // GET api/somiod/{appName}
         [HttpGet]
-        public IHttpActionResult GetAllApplications()
+        [Route("{appName}")]
+        public IHttpActionResult GetApplication(string appName)
         {
-            //return products;
-            List<Application> apps = new List<Application>();
+            if (string.IsNullOrWhiteSpace(appName))
+                return BadRequest("Application resource-name is required.");
+
+            Application app = null;
             SqlConnection conn = null;
             try
             {
@@ -28,18 +31,19 @@ namespace Somiod.Controllers
                 conn = new SqlConnection(connectionString);
                 conn.Open();
 
-                SqlCommand command = new SqlCommand("SELECT * FROM Prods ORDER BY Id", conn);
+                SqlCommand command = new SqlCommand("SELECT * FROM Application WHERE ResourceName = @name", conn);
+                command.Parameters.AddWithValue("@name", appName);
                 SqlDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
                 {
-                    Application a = new Application
+                    app = new Application
                     {
-                        ResourceName = (string)reader["ResoursceName"],
-                        ResType = (reader["ResType"] == DBNull.Value) ? "application" : (string)reader["Restype"],
-                        CreationDatetime = reader.GetDateTime(reader.GetOrdinal("CreationDatetime"))
+                        Id = (int)reader["Id"],
+                        ResourceName = (string)reader["ResourceName"],
+                        ResType = (string)reader["ResType"],
+                        CreationDatetime = (DateTime)reader["CreationDateTime"]
                     };
-                    apps.Add(a);
                 }
                 reader.Close();
                 conn.Close();
@@ -50,24 +54,64 @@ namespace Somiod.Controllers
                     conn.Close();
                 Console.WriteLine(e.Message);
             }
-            return Ok(apps);
+            return Ok(app);
         }
 
-        // GET api/<controller>
-        public IEnumerable<string> Get()
+        // POST api/somiod
+        [HttpPost]
+        [Route("")]
+        public IHttpActionResult PostApplication([FromBody] Application app)
         {
-            return new string[] { "value1", "value2" };
-        }
+            if (app == null)
+                return BadRequest("Invalid application payload.");
 
-        // GET api/<controller>/5
-        public string Get(int id)
-        {
-            return "value";
-        }
+            if (string.IsNullOrWhiteSpace(app.ResourceName))
+                return BadRequest("resource-name is required.");
 
-        // POST api/<controller>
-        public void Post([FromBody] string value)
-        {
+            app.ResType = "application";
+            app.CreationDatetime = DateTime.UtcNow;
+
+            SqlConnection conn = null;
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                // verificar se já existe uma com o mesmo resource-name
+                SqlCommand checkCmd = new SqlCommand(
+                    "SELECT COUNT(*) FROM Application WHERE ResourceName = @name", conn);
+                checkCmd.Parameters.AddWithValue("@name", app.ResourceName);
+                int count = (int)checkCmd.ExecuteScalar();
+                if (count > 0)
+                {
+                    return Content(HttpStatusCode.Conflict,
+                        $"Application with resource-name '{app.ResourceName}' already exists.");
+                }
+
+                string query = @"INSERT INTO Application (ResourceName, ResType, CreationDateTime)
+                                 VALUES (@name, @resType, @creation);
+                                 SELECT SCOPE_IDENTITY();";
+
+                SqlCommand command = new SqlCommand(query, conn);
+                command.Parameters.AddWithValue("@name", app.ResourceName);
+                command.Parameters.AddWithValue("@resType", app.ResType);
+                command.Parameters.AddWithValue("@creation", app.CreationDatetime);
+
+                // Id gerado
+                app.Id = Convert.ToInt32(command.ExecuteScalar());
+
+                conn.Close();
+
+                // no SOMIOD, ao criar um recurso devemos devolver o recurso completo
+                return Content(HttpStatusCode.Created, app);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open)
+                    conn.Close();
+                Console.WriteLine(e.Message);
+                return BadRequest("Erro ao criar a aplicação");
+            }
         }
 
         // PUT api/<controller>/5
