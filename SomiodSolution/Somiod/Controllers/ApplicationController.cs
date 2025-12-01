@@ -26,13 +26,12 @@ namespace Somiod.Controllers
             SqlConnection conn = null;
             try
             {
-                //conn = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\DBProds.mdf;Integrated Security=True;Connect Timeout=30");
-                //conn = new SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["ProductsApp.Properties.Settings.ConnectionToDB"].ConnectionString);
                 conn = new SqlConnection(connectionString);
                 conn.Open();
 
                 SqlCommand command = new SqlCommand("SELECT * FROM Application WHERE ResourceName = @name", conn);
                 command.Parameters.AddWithValue("@name", appName);
+
                 SqlDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
@@ -72,18 +71,21 @@ namespace Somiod.Controllers
             app.CreationDatetime = DateTime.UtcNow;
 
             SqlConnection conn = null;
+
             try
             {
                 conn = new SqlConnection(connectionString);
                 conn.Open();
 
-                // verificar se já existe uma com o mesmo resource-name
+                // verificar se já existe com o mesmo resource-name
                 SqlCommand checkCmd = new SqlCommand(
                     "SELECT COUNT(*) FROM Application WHERE ResourceName = @name", conn);
                 checkCmd.Parameters.AddWithValue("@name", app.ResourceName);
                 int count = (int)checkCmd.ExecuteScalar();
+
                 if (count > 0)
                 {
+                    conn.Close();
                     return Content(HttpStatusCode.Conflict,
                         $"Application with resource-name '{app.ResourceName}' already exists.");
                 }
@@ -97,13 +99,14 @@ namespace Somiod.Controllers
                 command.Parameters.AddWithValue("@resType", app.ResType);
                 command.Parameters.AddWithValue("@creation", app.CreationDatetime);
 
-                // Id gerado
+                // obter o Id gerado
                 app.Id = Convert.ToInt32(command.ExecuteScalar());
 
                 conn.Close();
 
-                // no SOMIOD, ao criar um recurso devemos devolver o recurso completo
-                return Content(HttpStatusCode.Created, app);
+                // estilo das aulas: Created com localização do novo recurso
+                var location = new Uri(Request.RequestUri + "/" + app.ResourceName);
+                return Created(location, app);
             }
             catch (Exception e)
             {
@@ -114,14 +117,92 @@ namespace Somiod.Controllers
             }
         }
 
-        // PUT api/<controller>/5
-        public void Put(int id, [FromBody] string value)
+        // DELETE api/somiod/{appName}
+        [HttpDelete]
+        [Route("{appName}")]
+        public IHttpActionResult DeleteApplication(string appName)
         {
+            if (string.IsNullOrWhiteSpace(appName))
+                return BadRequest("Application resource-name is required.");
+
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                string query = "DELETE FROM Application WHERE ResourceName = @name";
+                SqlCommand command = new SqlCommand(query, conn);
+                command.Parameters.AddWithValue("@name", appName);
+
+                int rowsAffected = command.ExecuteNonQuery();
+
+                conn.Close();
+
+                if (rowsAffected > 0)
+                    return Ok($"A aplicação '{appName}' foi eliminada com sucesso!");
+                else
+                    return NotFound();
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open)
+                    conn.Close();
+                Console.WriteLine(e.Message);
+                return BadRequest("Erro ao excluir a aplicação");
+            }
         }
 
-        // DELETE api/<controller>/5
-        public void Delete(int id)
+
+        // GET api/somiod   (DISCOVERY de applications)
+        // Usa header: somiod-discovery: application
+        [HttpGet]
+        [Route("")]
+        public IHttpActionResult DiscoverApplications()
         {
+            var hasHeader = Request.Headers.Contains("somiod-discovery");
+            var headerValue = hasHeader
+                ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault()
+                : null;
+
+            if (!hasHeader || !string.Equals(headerValue, "application", StringComparison.OrdinalIgnoreCase))
+            {
+                // tal como manda o enunciado: nada de GET-all normal
+                return BadRequest("Use header 'somiod-discovery: application' para discovery de applications.");
+            }
+
+            List<string> paths = new List<string>();
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                SqlCommand command = new SqlCommand(
+                    "SELECT ResourceName FROM Application ORDER BY Id", conn);
+                SqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    string name = (string)reader["ResourceName"];
+                    paths.Add($"/api/somiod/{name}");
+                }
+
+                reader.Close();
+                conn.Close();
+
+                return Ok(paths);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open)
+                    conn.Close();
+                Console.WriteLine(e.Message);
+                return InternalServerError(e);
+            }
         }
+
     }
 }
