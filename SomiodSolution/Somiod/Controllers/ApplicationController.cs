@@ -104,9 +104,14 @@ namespace Somiod.Controllers
 
                 conn.Close();
 
-                // estilo das aulas: Created com localização do novo recurso
-                var location = new Uri(Request.RequestUri + "/" + app.ResourceName);
-                return Created(location, app);
+                int rows = command.ExecuteNonQuery();
+
+                conn.Close();
+                if (rows > 0)
+                    return Ok("Aplicação inserida com sucesso!");
+                else
+                    return BadRequest("Erro ao inserir a Aplicação.");
+
             }
             catch (Exception e)
             {
