@@ -18,8 +18,6 @@ namespace Somiod.Models
         [JsonProperty("creation-datetime")]
         public DateTime CreationDatetime { get; set; }
 
-        // FK para Application.Id (coluna Application_ID na BD)
-        [JsonIgnore]
-        public int Application_ID { get; set; }
+        
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using Somiod.Models;
 
 namespace Somiod.Controllers
 {
@@ -19,7 +21,7 @@ namespace Somiod.Controllers
         public IHttpActionResult GetContainer(string appName, string contName)
         {
             SqlConnection conn = null;
-            Container cont = null;
+            Containers cont = null;
 
             try
             {
@@ -39,7 +41,7 @@ namespace Somiod.Controllers
 
                 if (reader.Read())
                 {
-                    cont = new Container
+                    cont = new Containers
                     {
                         Id = (int)reader["Id"],
                         ResourceName = (string)reader["ResourceName"],
@@ -71,7 +73,7 @@ namespace Somiod.Controllers
         // POST api/somiod/{appName}
         [HttpPost]
         [Route("{appName}")]
-        public IHttpActionResult PostContainer(string appName, [FromBody] Container c)
+        public IHttpActionResult PostContainer(string appName, [FromBody] Containers c)
         {
             SqlConnection conn = null;
             if (c == null)
@@ -128,7 +130,7 @@ namespace Somiod.Controllers
                 insertContainerCmd.Parameters.AddWithValue("@appId", appId);
 
                 // obter o Id gerado
-                c.Id = ínt(insertCmd.ExecuteScalar());
+                c.Id = (int)insertContainerCmd.ExecuteScalar();
 
                 int rows = insertContainerCmd.ExecuteNonQuery();
                 
