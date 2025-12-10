@@ -12,7 +12,7 @@ namespace Somiod.Controllers
     [RoutePrefix("api/somiod")]
     public class ApplicationController : ApiController
     {
-        string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["SomiodSolution.Properties.Settings.ConnStr"].ConnectionString;
+        string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["Somiod.Properties.Settings.ConnStr"].ConnectionString;
 
         // GET api/somiod/{appName}
         [HttpGet]
@@ -104,13 +104,8 @@ namespace Somiod.Controllers
 
                 conn.Close();
 
-                int rows = command.ExecuteNonQuery();
-
-                conn.Close();
-                if (rows > 0)
-                    return Ok("Aplicação inserida com sucesso!");
-                else
-                    return BadRequest("Erro ao inserir a Aplicação.");
+                // se chegou aqui sem exceção, consideramos sucesso
+                return Ok("Aplicação inserida com sucesso!");
 
             }
             catch (Exception e)

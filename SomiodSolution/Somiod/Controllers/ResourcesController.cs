@@ -9,16 +9,16 @@ using System.Web.Http;
 
 namespace Somiod.Controllers
 {
-    [RoutePrefix("api/somiod")]
+    //[RoutePrefix("api/somiod")]
     public class ResourcesController : ApiController
     {
-        string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["SomiodSolution.Properties.Settings.ConnStr"].ConnectionString;
+        string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["Somiod.Properties.Settings.ConnStr"].ConnectionString;
 
         //   CONTENT-INSTANCES
 
         // POST api/somiod/{appName}/{contName}
         [HttpPost]
-        [Route("{appName}/{contName}")]
+        [Route("api/somiod/{appName}/{contName}/contents")]
         public IHttpActionResult PostContentInstance(string appName, string contName, [FromBody] ContentInstances ci)
         {
             if (ci == null)
@@ -115,7 +115,7 @@ namespace Somiod.Controllers
 
         // GET api/somiod/{appName}/{contName}/{ciName}
         [HttpGet]
-        [Route("{appName}/{contName}/{ciName}")]
+        [Route("api/somiod/{appName}/{contName}/{ciName}")]
         public IHttpActionResult GetContentInstance(string appName, string contName, string ciName)
         {
             SqlConnection conn = null;
@@ -176,7 +176,7 @@ namespace Somiod.Controllers
 
         // DELETE api/somiod/{appName}/{contName}/{ciName}
         [HttpDelete]
-        [Route("{appName}/{contName}/{ciName}")]
+        [Route("api/somiod/{appName}/{contName}/{ciName}")]
         public IHttpActionResult DeleteContentInstance(string appName, string contName, string ciName)
         {
             SqlConnection conn = null;
@@ -227,7 +227,7 @@ namespace Somiod.Controllers
 
         // POST api/somiod/{appName}/{contName}/subs
         [HttpPost]
-        [Route("{appName}/{contName}/subs")]
+        [Route("api/somiod/{appName}/{contName}/subs")]
         public IHttpActionResult PostSubscription(string appName, string contName, [FromBody] Subscriptions sub)
         {
             if (sub == null)
@@ -322,7 +322,7 @@ namespace Somiod.Controllers
 
         // GET api/somiod/{appName}/{contName}/subs/{subName}
         [HttpGet]
-        [Route("{appName}/{contName}/subs/{subName}")]
+        [Route("api/somiod/{appName}/{contName}/subs/{subName}")]
         public IHttpActionResult GetSubscription(string appName, string contName, string subName)
         {
             SqlConnection conn = null;
@@ -382,7 +382,7 @@ namespace Somiod.Controllers
 
         // DELETE api/somiod/{appName}/{contName}/subs/{subName}
         [HttpDelete]
-        [Route("{appName}/{contName}/subs/{subName}")]
+        [Route("api/somiod/{appName}/{contName}/subs/{subName}")]
         public IHttpActionResult DeleteSubscription(string appName, string contName, string subName)
         {
             SqlConnection conn = null;

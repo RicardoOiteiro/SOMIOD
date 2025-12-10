@@ -9,15 +9,15 @@ using Somiod.Models;
 
 namespace Somiod.Controllers
 {
-    [RoutePrefix("api/somiod")]
+    //[RoutePrefix("api/somiod")]
     public class ContainersController : ApiController
     {
-        string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["SomiodSolution.Properties.Settings.ConnStr"].ConnectionString;
+        string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["Somiod.Properties.Settings.ConnStr"].ConnectionString;
 
 
         // GET api/somiod/{appName}/{contName}
         [HttpGet]
-        [Route("{appName}/{contName}")]
+        [Route("api/somiod/{appName}/{contName}")]
         public IHttpActionResult GetContainer(string appName, string contName)
         {
             SqlConnection conn = null;
@@ -72,7 +72,7 @@ namespace Somiod.Controllers
 
         // POST api/somiod/{appName}
         [HttpPost]
-        [Route("{appName}")]
+        [Route("api/somiod/{appName}/containers")]
         public IHttpActionResult PostContainer(string appName, [FromBody] Containers c)
         {
             SqlConnection conn = null;
@@ -130,15 +130,12 @@ namespace Somiod.Controllers
                 insertContainerCmd.Parameters.AddWithValue("@appId", appId);
 
                 // obter o Id gerado
-                c.Id = (int)insertContainerCmd.ExecuteScalar();
+                c.Id = Convert.ToInt32(insertContainerCmd.ExecuteScalar());
 
-                int rows = insertContainerCmd.ExecuteNonQuery();
-                
                 conn.Close();
-                if (rows > 0)
-                    return Ok("Container inserido com sucesso!");
-                else
-                    return BadRequest("Erro ao inserir o Container.");
+
+                // se chegou aqui sem exceção, consideramos sucesso
+                return Ok("Container inserida com sucesso!");
             }
             catch (Exception e)
             {
@@ -151,7 +148,7 @@ namespace Somiod.Controllers
 
         // GET api/somiod/{appName}/containers  (DISCOVERY)
         [HttpGet]
-        [Route("{appName}/containers")]
+        [Route("api/somiod/{appName}/containers")]
         public IHttpActionResult DiscoverContainers(string appName)
         {
             var hasHeader = Request.Headers.Contains("somiod-discovery");
@@ -205,7 +202,7 @@ namespace Somiod.Controllers
 
         // DELETE api/somiod/{appName}/{contName}
         [HttpDelete]
-        [Route("{appName}/{contName}")]
+        [Route("api/somiod/{appName}/{contName}")]
         public IHttpActionResult DeleteContainer(string appName, string contName)
         {
             SqlConnection conn = null;
