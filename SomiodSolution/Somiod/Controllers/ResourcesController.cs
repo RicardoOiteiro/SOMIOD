@@ -6,6 +6,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using uPLibrary.Networking.M2Mqtt;
+using uPLibrary.Networking.M2Mqtt.Messages;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace Somiod.Controllers
 {
@@ -102,6 +106,7 @@ namespace Somiod.Controllers
 
                 // mais tarde aqui irás disparar notificações (evt = 1)
                 return Ok("Content-instance inserida com sucesso!");
+                NotifySubscribers(appName, contName, ci, 1);
             }
             catch (Exception e)
             {
@@ -179,6 +184,7 @@ namespace Somiod.Controllers
         [Route("api/somiod/{appName}/{contName}/{ciName}")]
         public IHttpActionResult DeleteContentInstance(string appName, string contName, string ciName)
         {
+            ContentInstances ciDeleted = null;
             SqlConnection conn = null;
 
             try
@@ -186,30 +192,57 @@ namespace Somiod.Controllers
                 conn = new SqlConnection(connectionString);
                 conn.Open();
 
-                SqlCommand cmd = new SqlCommand(
-                    @"DELETE FROM ContentInstances
-                      WHERE Id IN (
-                        SELECT ci.Id
-                        FROM ContentInstances ci
-                        INNER JOIN Containers c ON ci.Container_ID = c.Id
-                        INNER JOIN Application a ON c.Application_ID = a.Id
-                        WHERE a.ResourceName = @appName
-                          AND c.ResourceName = @contName
-                          AND ci.ResourceName = @ciName
-                      )", conn);
+                // 1) Primeiro ir buscar a content-instance
+                SqlCommand Cmd = new SqlCommand(
+                    @"SELECT ci.Id, ci.ResourceName, ci.ResType, ci.CreationDateTime,
+                     ci.ContentType, ci.Content
+                     FROM ContentInstances ci
+                     INNER JOIN Containers c ON ci.Container_ID = c.Id
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    WHERE a.ResourceName = @appName
+                     AND c.ResourceName = @contName
+                    AND ci.ResourceName = @ciName",conn);
 
-                cmd.Parameters.AddWithValue("@appName", appName);
-                cmd.Parameters.AddWithValue("@contName", contName);
-                cmd.Parameters.AddWithValue("@ciName", ciName);
+                Cmd.Parameters.AddWithValue("@appName", appName);
+                Cmd.Parameters.AddWithValue("@contName", contName);
+                Cmd.Parameters.AddWithValue("@ciName", ciName);
 
-                int rows = cmd.ExecuteNonQuery();
+                SqlDataReader reader = Cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    ciDeleted = new ContentInstances
+                    {
+                        Id = (int)reader["Id"],
+                        ResourceName = (string)reader["ResourceName"],
+                        ResType = (string)reader["ResType"],
+                        CreationDatetime = (DateTime)reader["CreationDateTime"],
+                        ContentType = (string)reader["ContentType"],
+                        Content = (string)reader["Content"]
+                    };
+                }
+
+                reader.Close();
+
+                if (ciDeleted == null)
+                {
+                    conn.Close();
+                    return NotFound();
+                }
+
+                // 2) Agora sim: eliminar
+                SqlCommand deleteCmd = new SqlCommand(
+                    @"DELETE FROM ContentInstances WHERE Id = @id",
+                    conn);
+
+                deleteCmd.Parameters.AddWithValue("@id", ciDeleted.Id);
+                int rows = deleteCmd.ExecuteNonQuery();
 
                 conn.Close();
 
-                if (rows == 0)
-                    return NotFound();
+                // 3) Enviar notificações MQTT ou HTTP (evento = 2)
+                NotifySubscribers(appName, contName, ciDeleted, 2);
 
-                // mais tarde aqui irás disparar notificações (evt = 2)
                 return Ok($"Content-instance '{ciName}' eliminada com sucesso.");
             }
             catch (Exception e)
@@ -221,6 +254,115 @@ namespace Somiod.Controllers
             }
         }
 
+
+        private void NotifySubscribers(string appName, string contName, ContentInstances ci, int evt)
+        {
+            // aqui fazes:
+            // 1) SELECT às subscriptions daquele container
+            // 2) para cada subscription:
+            //      - se for MQTT → publish
+            //      - se for HTTP → HTTP POST
+            SqlConnection conn = null;
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                // 1) ir buscar subscriptions do container com o evt correto
+                SqlCommand cmd = new SqlCommand(
+                    @"SELECT ResourceName, Evt, Endpoint
+                    FROM Subscriptions s
+                    INNER JOIN Containers c ON s.Container_ID = c.Id
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    WHERE a.ResourceName = @appName
+                    AND c.ResourceName = @contName
+                    AND s.Evt = @evt", conn);
+
+                cmd.Parameters.AddWithValue("@appName", appName);
+                cmd.Parameters.AddWithValue("@contName", contName);
+                cmd.Parameters.AddWithValue("@evt", evt);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                var subs = new List<Subscriptions>();
+                while (reader.Read())
+                {
+                    subs.Add(new Subscriptions
+                    {
+                        ResourceName = (string)reader["ResourceName"],
+                        Evt = (int)reader["Evt"],
+                        Endpoint = (string)reader["Endpoint"]
+                    });
+                }
+
+                reader.Close();
+                conn.Close();
+
+                // 2) para cada sub, decidir se é MQTT ou HTTP
+                foreach (var sub in subs)
+                {
+                    if (sub.Endpoint.StartsWith("mqtt://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        SendMqttNotification(appName, contName, ci, evt, sub);
+                    }
+                    else if (sub.Endpoint.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    {
+                        SendHttpNotification(appName, contName, ci, evt, sub);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open)
+                    conn.Close();
+                Console.WriteLine(e.Message);
+                // aqui não rebentas a request só por falhar notificação
+            }
+        }
+        private void SendMqttNotification(string appName, string contName, ContentInstances ci, int evt, Subscriptions sub)
+        {
+            // Endpoint vem tipo: mqtt://api/somiod/appX/contY
+            string topic = sub.Endpoint.Substring("mqtt://".Length);
+
+            string broker = System.Configuration.ConfigurationManager.AppSettings["MqttBrokerAddress"];
+            int port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["MqttBrokerPort"]); //Ambos prefeitos na web config
+
+            var client = new MqttClient(broker, port, false, null, null, MqttSslProtocols.None);
+            string clientId = Guid.NewGuid().ToString();
+            client.Connect(clientId);
+
+            var payloadObj = new
+            {
+                resource = $"/api/somiod/{appName}/{contName}/{ci.ResourceName}",
+                eventType = (evt == 1 ? "creation" : "deletion"),
+                timestamp = DateTime.UtcNow.ToString("o")
+            };
+
+            string json = JsonConvert.SerializeObject(payloadObj);
+            byte[] message = Encoding.UTF8.GetBytes(json);
+
+            client.Publish(topic, message, MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+            client.Disconnect();
+        }
+        private void SendHttpNotification(string appName, string contName, ContentInstances ci, int evt, Subscriptions sub)
+        {
+            var bodyObj = new
+            {
+                resource = $"/api/somiod/{appName}/{contName}/{ci.ResourceName}",
+                eventType = (evt == 1 ? "creation" : "deletion"),
+                timestamp = DateTime.UtcNow.ToString("o")
+            };
+
+            string json = JsonConvert.SerializeObject(bodyObj);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using (var http = new System.Net.Http.HttpClient())
+            {
+                // como os teus controllers não são async, uso .Result
+                var response = http.PostAsync(sub.Endpoint, content).Result;
+                // podes ignorar ou logar response.StatusCode
+            }
+        }
 
 
         //      SUBSCRIPTIONS
@@ -425,5 +567,6 @@ namespace Somiod.Controllers
                 return InternalServerError(e);
             }
         }
+
     }
 }
