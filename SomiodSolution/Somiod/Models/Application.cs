@@ -14,7 +14,7 @@ namespace Somiod.Models
 
         [JsonProperty("res-type")]
         public string ResType { get; set; } = "application";
-        // Use nullable DateTime to map SQL Server datetime2(7); allows NULLs from DB
+
         [JsonProperty("creation-datetime")]
         public DateTime CreationDatetime { get; set; }
 
