@@ -39,7 +39,7 @@ namespace AppArbitro
 
             btnIniciarJogo.Enabled = false;
 
-            // 1) criar application
+            //criar application
             bool okApp = await CreateApplicationAsync(_appName);
             if (!okApp)
             {
@@ -48,7 +48,7 @@ namespace AppArbitro
                 return;
             }
 
-            // 2) criar container "eventos"
+            //criar container "eventos"
             bool okCont = await CreateContainerAsync(_appName, ContainerName);
             if (!okCont)
             {
@@ -58,19 +58,19 @@ namespace AppArbitro
                 return;
             }
 
-            // reset contadores
+            // reset
             _golos = 0;
             _cartoes = 0;
             _subs = 0;
 
             // UI
-            lblJogoAtual.Text = $"Jogo atual: {_appName}";
+            lblJogoAtual.Text = $" {_appName}";
             SetJogoUIVisible(true);
 
-            txtEquipaA.Enabled = false;
-            txtEquipaB.Enabled = false;
+            SetStartUIVisible(false);
+            SetJogoUIVisible(true);
 
-            MessageBox.Show("Jogo iniciado com sucesso!");
+            MessageBox.Show("Inicio do Jogo!");
         }
 
         private async void btnTerminar_Click(object sender, EventArgs e)
@@ -87,9 +87,7 @@ namespace AppArbitro
                 lblJogoAtual.Text = "";
                 SetJogoUIVisible(false);
 
-                txtEquipaA.Enabled = true;
-                txtEquipaB.Enabled = true;
-                btnIniciarJogo.Enabled = true;
+                SetStartUIVisible(true);
                 btnTerminar.Enabled = true;
 
                 txtEquipaA.Clear();
@@ -109,7 +107,7 @@ namespace AppArbitro
             if (_appName == null) return;
 
             string minutoStr = Interaction.InputBox("Minuto do golo?", "GOLO", "0");
-            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 130)
+            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 120)
             {
                 MessageBox.Show("Minuto inválido.");
                 return;
@@ -129,14 +127,11 @@ namespace AppArbitro
             {
                 tipo = "golo",
                 minuto = minuto,
-                jogador = jogador.Trim(),
-                equipaA = txtEquipaA.Text.Trim(),
-                equipaB = txtEquipaB.Text.Trim(),
-                timestamp = DateTime.UtcNow.ToString("o")
+                jogador = jogador.Trim()
             };
 
             bool ok = await PublishEventAsync(ciName, payload);
-            if (ok) MessageBox.Show($"Evento publicado: {ciName}");
+            if (ok) MessageBox.Show($"Golo assinalado: {ciName}");
         }
 
         private async void btnCartao_Click(object sender, EventArgs e)
@@ -144,7 +139,7 @@ namespace AppArbitro
             if (_appName == null) return;
 
             string minutoStr = Interaction.InputBox("Minuto do cartão?", "CARTÃO", "0");
-            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 130)
+            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 120)
             {
                 MessageBox.Show("Minuto inválido.");
                 return;
@@ -172,14 +167,11 @@ namespace AppArbitro
                 tipo = "cartao",
                 minuto = minuto,
                 jogador = jogador.Trim(),
-                cartao = tipoCartao,
-                equipaA = txtEquipaA.Text.Trim(),
-                equipaB = txtEquipaB.Text.Trim(),
-                timestamp = DateTime.UtcNow.ToString("o")
+                cartao = tipoCartao
             };
 
             bool ok = await PublishEventAsync(ciName, payload);
-            if (ok) MessageBox.Show($"Evento publicado: {ciName}");
+            if (ok) MessageBox.Show($"Cartão atribuido: {ciName}");
         }
 
         private async void btnSub_Click(object sender, EventArgs e)
@@ -187,7 +179,7 @@ namespace AppArbitro
             if (_appName == null) return;
 
             string minutoStr = Interaction.InputBox("Minuto da substituição?", "SUBSTITUIÇÃO", "0");
-            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 130)
+            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 120)
             {
                 MessageBox.Show("Minuto inválido.");
                 return;
@@ -215,29 +207,37 @@ namespace AppArbitro
                 tipo = "substituicao",
                 minuto = minuto,
                 sai = sai.Trim(),
-                entra = entra.Trim(),
-                equipaA = txtEquipaA.Text.Trim(),
-                equipaB = txtEquipaB.Text.Trim(),
-                timestamp = DateTime.UtcNow.ToString("o")
+                entra = entra.Trim()
             };
 
             bool ok = await PublishEventAsync(ciName, payload);
-            if (ok) MessageBox.Show($"Evento publicado: {ciName}");
+            if (ok) MessageBox.Show($"Substituição realizada: {ciName}");
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            SetStartUIVisible(true);
             // esconder tudo até iniciar jogo com sucesso
             SetJogoUIVisible(false);
         }
 
         private void SetJogoUIVisible(bool visible)
         {
+            label3.Visible = visible;
             lblJogoAtual.Visible = visible;
             btnGolo.Visible = visible;
             btnCartao.Visible = visible;
             btnSub.Visible = visible;
             btnTerminar.Visible = visible;
+        }
+
+        private void SetStartUIVisible(bool visible)
+        {
+            label1.Visible = visible;
+            label2.Visible = visible;
+            txtEquipaA.Visible = visible;
+            txtEquipaB.Visible = visible;
+            btnIniciarJogo.Visible = visible;
         }
 
         #region Metodos 
@@ -338,11 +338,6 @@ namespace AppArbitro
             {
                 var client = MakeClient();
 
-                // 1) apagar content-instances do jogo (todas dentro dos containers da app)
-                //    Fazemos DELETE direto na API: precisa de rota.
-                //    Como tu não tens GET-all, vamos assumir o container "eventos" (o teu caso).
-                //    Vamos apagar tudo o que conseguimos: golo1..N, cartao1..N, sub1..N
-                //    (é simples e suficiente para a demo)
 
                 // apagar golos
                 for (int i = 1; i <= _golos; i++)

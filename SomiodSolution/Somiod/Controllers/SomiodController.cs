@@ -32,7 +32,7 @@ namespace Somiod.Controllers
                 ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault()
                 : null;
 
-            // 👉 DISCOVERY DE CONTAINERS
+            // discovery containers
             if (hasHeader && string.Equals(headerValue, "container", StringComparison.OrdinalIgnoreCase))
             {
                 List<string> paths = new List<string>();
@@ -73,7 +73,7 @@ namespace Somiod.Controllers
                 }
             }
 
-            // GET APPLICATION NORMAL
+            // GET APPLICATION normal
             Application app = null;
             SqlConnection connApp = null;
 
@@ -255,7 +255,7 @@ namespace Somiod.Controllers
             }
         }
 
-        // GET api/somiod  (DISCOVERY applications)
+        // GET api/somiod  discovery applications)
         [HttpGet]
         [Route("")]
         public IHttpActionResult DiscoverApplications()
@@ -478,59 +478,6 @@ namespace Somiod.Controllers
                 return BadRequest("Erro ao atualizar o container");
             }
         }
-
-        // GET api/somiod/{appName}  (DISCOVERY containers)
-        /*[HttpGet]
-        [Route("{appName}")]
-        public IHttpActionResult DiscoverContainers(string appName)
-        {
-            var hasHeader = Request.Headers.Contains("somiod-discovery");
-            var headerValue = hasHeader
-                ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault()
-                : null;
-
-            if (!hasHeader || !string.Equals(headerValue, "container", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("Use header 'somiod-discovery: container' para discovery de containers.");
-
-            List<string> paths = new List<string>();
-            SqlConnection conn = null;
-
-            try
-            {
-                conn = new SqlConnection(connectionString);
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand(
-                    @"SELECT c.ResourceName
-                      FROM Containers c
-                      INNER JOIN Application a ON c.Application_ID = a.Id
-                      WHERE a.ResourceName = @appName
-                      ORDER BY c.Id", conn);
-
-                cmd.Parameters.AddWithValue("@appName", appName);
-
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    string name = (string)reader["ResourceName"];
-                    paths.Add($"/api/somiod/{appName}/{name}");
-                }
-
-                reader.Close();
-                conn.Close();
-
-                return Ok(paths);
-            }
-            catch (Exception e)
-            {
-                if (conn != null && conn.State == System.Data.ConnectionState.Open)
-                    conn.Close();
-
-                Console.WriteLine(e.Message);
-                return InternalServerError(e);
-            }
-        }*/
 
         // DELETE api/somiod/{appName}/{contName}
         [HttpDelete]
@@ -794,9 +741,7 @@ namespace Somiod.Controllers
 
         private void NotifySubscribers(string appName, string contName, ContentInstances ci, int evt)
         {
-            // aqui fazes:
-            // 1) SELECT às subscriptions daquele container
-            // 2) para cada subscription:
+            //para cada subscription:
             //      - se for MQTT → publish
             //      - se for HTTP → HTTP POST
             Debug.WriteLine($"[Notify] Entrei no NotifySubscribers para {appName}/{contName}, evt={evt}");
@@ -806,7 +751,7 @@ namespace Somiod.Controllers
                 conn = new SqlConnection(connectionString);
                 conn.Open();
 
-                // 1) ir buscar subscriptions do container com o evt correto
+                // ir buscar subscriptions do container com o evt correto
                 SqlCommand cmd = new SqlCommand(
                     @"SELECT s.ResourceName, s.Evt, s.Endpoint
             FROM Subscriptions s
@@ -837,7 +782,7 @@ namespace Somiod.Controllers
                 conn.Close();
                 Debug.WriteLine($"[Notify] Encontrei {subs.Count} subscriptions.");
 
-                // 2) para cada sub, decidir se é MQTT ou HTTP
+                // decidir se é MQTT ou HTTP (para cada sub)
                 foreach (var sub in subs)
                 {
                     Debug.WriteLine($"[Notify] Endpoint recebido: '{sub.Endpoint}'");
@@ -934,9 +879,7 @@ namespace Somiod.Controllers
 
             using (var http = new System.Net.Http.HttpClient())
             {
-                // como os teus controllers não são async, uso .Result
                 var response = http.PostAsync(sub.Endpoint, content).Result;
-                // podes ignorar ou logar response.StatusCode
             }
         }
 
@@ -971,7 +914,7 @@ namespace Somiod.Controllers
                 conn = new SqlConnection(connectionString);
                 conn.Open();
 
-                // 1) Obter Id do container
+                // Obter Id do container
                 SqlCommand getContCmd = new SqlCommand(
                     @"SELECT c.Id
                       FROM Containers c
@@ -991,7 +934,7 @@ namespace Somiod.Controllers
                 int contId = (int)contResult;
                 sub.Container_ID = contId;
 
-                // 2) Verificar duplicado
+
                 SqlCommand checkCmd = new SqlCommand(
                     @"SELECT COUNT(*) FROM Subscriptions
                       WHERE Container_ID = @contId AND ResourceName = @name", conn);
@@ -1006,7 +949,7 @@ namespace Somiod.Controllers
                         $"Já existe uma subscription com o nome '{sub.ResourceName}' no container '{contName}'.");
                 }
 
-                // 3) Inserir subscription
+                // Inserir subscription
                 SqlCommand insertCmd = new SqlCommand(
                     @"INSERT INTO Subscriptions 
                         (ResourceName, ResType, CreationDateTime, Evt, Endpoint, Container_ID)
