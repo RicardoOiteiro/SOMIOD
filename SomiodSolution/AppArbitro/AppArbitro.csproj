@@ -93,11 +93,39 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormCartao.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCartao.Designer.cs">
+      <DependentUpon>FormCartao.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormGolo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormGolo.Designer.cs">
+      <DependentUpon>FormGolo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSubstituicao.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSubstituicao.Designer.cs">
+      <DependentUpon>FormSubstituicao.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EventData.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SomiodApiClient.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormCartao.resx">
+      <DependentUpon>FormCartao.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormGolo.resx">
+      <DependentUpon>FormGolo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSubstituicao.resx">
+      <DependentUpon>FormSubstituicao.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

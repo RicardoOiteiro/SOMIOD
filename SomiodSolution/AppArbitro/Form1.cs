@@ -106,112 +106,80 @@ namespace AppArbitro
         {
             if (_appName == null) return;
 
-            string minutoStr = Interaction.InputBox("Minuto do golo?", "GOLO", "0");
-            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 120)
+            using (var f = new FormGolo(txtEquipaA.Text.Trim(), txtEquipaB.Text.Trim()))
             {
-                MessageBox.Show("Minuto inválido.");
-                return;
+                if (f.ShowDialog(this) != DialogResult.OK) return;
+
+                _golos++;
+                string ciName = $"golo{_golos}";
+
+                var payload = new
+                {
+                    tipo = "golo",
+                    minuto = f.Data.Minuto,
+                    jogador = f.Data.Jogador,
+                    equipa = f.Data.Equipa
+                };
+
+                bool ok = await PublishEventAsync(ciName, payload);
+                if (ok) MessageBox.Show($"Golo assinalado: {ciName}");
             }
-
-            string jogador = Interaction.InputBox("Nome do jogador?", "GOLO", "");
-            if (string.IsNullOrWhiteSpace(jogador))
-            {
-                MessageBox.Show("Jogador é obrigatório.");
-                return;
-            }
-
-            _golos++;
-            string ciName = $"golo{_golos}";
-
-            var payload = new
-            {
-                tipo = "golo",
-                minuto = minuto,
-                jogador = jogador.Trim()
-            };
-
-            bool ok = await PublishEventAsync(ciName, payload);
-            if (ok) MessageBox.Show($"Golo assinalado: {ciName}");
         }
 
         private async void btnCartao_Click(object sender, EventArgs e)
         {
             if (_appName == null) return;
 
-            string minutoStr = Interaction.InputBox("Minuto do cartão?", "CARTÃO", "0");
-            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 120)
+            string equipaA = txtEquipaA.Text.Trim();
+            string equipaB = txtEquipaB.Text.Trim();
+
+            using (var f = new FormCartao(equipaA, equipaB))
             {
-                MessageBox.Show("Minuto inválido.");
-                return;
+                if (f.ShowDialog(this) != DialogResult.OK) return;
+
+                _cartoes++;
+                string ciName = $"cartao{_cartoes}";
+
+                var payload = new
+                {
+                    tipo = "cartao",
+                    minuto = f.Result.Minuto,
+                    jogador = f.Result.Jogador,
+                    cartao = f.Result.TipoCartao,
+                    equipa = f.Result.Equipa
+                };
+
+                bool ok = await PublishEventAsync(ciName, payload);
+                if (ok) MessageBox.Show($"Cartão atribuído: {ciName}");
             }
-
-            string jogador = Interaction.InputBox("Nome do jogador?", "CARTÃO", "");
-            if (string.IsNullOrWhiteSpace(jogador))
-            {
-                MessageBox.Show("Jogador é obrigatório.");
-                return;
-            }
-
-            string tipoCartao = Interaction.InputBox("Tipo de cartão? (amarelo/vermelho)", "CARTÃO", "amarelo").ToLowerInvariant();
-            if (tipoCartao != "amarelo" && tipoCartao != "vermelho")
-            {
-                MessageBox.Show("Tipo de cartão inválido (usa amarelo ou vermelho).");
-                return;
-            }
-
-            _cartoes++;
-            string ciName = $"cartao{_cartoes}";
-
-            var payload = new
-            {
-                tipo = "cartao",
-                minuto = minuto,
-                jogador = jogador.Trim(),
-                cartao = tipoCartao
-            };
-
-            bool ok = await PublishEventAsync(ciName, payload);
-            if (ok) MessageBox.Show($"Cartão atribuido: {ciName}");
         }
 
         private async void btnSub_Click(object sender, EventArgs e)
         {
             if (_appName == null) return;
 
-            string minutoStr = Interaction.InputBox("Minuto da substituição?", "SUBSTITUIÇÃO", "0");
-            if (!int.TryParse(minutoStr, out int minuto) || minuto < 0 || minuto > 120)
+            string equipaA = txtEquipaA.Text.Trim();
+            string equipaB = txtEquipaB.Text.Trim();
+
+            using (var f = new FormSubstituicao(equipaA, equipaB))
             {
-                MessageBox.Show("Minuto inválido.");
-                return;
+                if (f.ShowDialog(this) != DialogResult.OK) return;
+
+                _subs++;
+                string ciName = $"sub{_subs}";
+
+                var payload = new
+                {
+                    tipo = "substituicao",
+                    minuto = f.Result.Minuto,
+                    sai = f.Result.Sai,
+                    entra = f.Result.Entra,
+                    equipa = f.Result.Equipa
+                };
+
+                bool ok = await PublishEventAsync(ciName, payload);
+                if (ok) MessageBox.Show($"Substituição realizada: {ciName}");
             }
-
-            string sai = Interaction.InputBox("Jogador que sai?", "SUBSTITUIÇÃO", "");
-            if (string.IsNullOrWhiteSpace(sai))
-            {
-                MessageBox.Show("Jogador que sai é obrigatório.");
-                return;
-            }
-
-            string entra = Interaction.InputBox("Jogador que entra?", "SUBSTITUIÇÃO", "");
-            if (string.IsNullOrWhiteSpace(entra))
-            {
-                MessageBox.Show("Jogador que entra é obrigatório.");
-                return;
-            }
-
-            _subs++;
-            string ciName = $"sub{_subs}";
-
-            var payload = new
-            {
-                tipo = "substituicao",
-                minuto = minuto,
-                sai = sai.Trim(),
-                entra = entra.Trim()
-            };
-
-            bool ok = await PublishEventAsync(ciName, payload);
-            if (ok) MessageBox.Show($"Substituição realizada: {ciName}");
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -241,6 +209,7 @@ namespace AppArbitro
         }
 
         #region Metodos 
+
 
         private async System.Threading.Tasks.Task<bool> CreateApplicationAsync(string appName)
         {
