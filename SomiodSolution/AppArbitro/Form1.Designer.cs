@@ -138,9 +138,9 @@
             this.lblJogoAtual.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblJogoAtual.Location = new System.Drawing.Point(254, 109);
             this.lblJogoAtual.Name = "lblJogoAtual";
-            this.lblJogoAtual.Size = new System.Drawing.Size(46, 18);
+            this.lblJogoAtual.Size = new System.Drawing.Size(88, 18);
             this.lblJogoAtual.TabIndex = 9;
-            this.lblJogoAtual.Text = "label3";
+            this.lblJogoAtual.Text = "lblJogoAtual";
             // 
             // label3
             // 
