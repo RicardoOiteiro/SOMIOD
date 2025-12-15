@@ -39,6 +39,7 @@
             this.btnTerminar = new System.Windows.Forms.Button();
             this.lblJogoAtual = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.btnEditarEquipas = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // txtEquipaA
@@ -153,11 +154,22 @@
             this.label3.TabIndex = 10;
             this.label3.Text = "JOGO ATUAL:";
             // 
+            // btnEditarEquipas
+            // 
+            this.btnEditarEquipas.Location = new System.Drawing.Point(296, 187);
+            this.btnEditarEquipas.Name = "btnEditarEquipas";
+            this.btnEditarEquipas.Size = new System.Drawing.Size(156, 44);
+            this.btnEditarEquipas.TabIndex = 11;
+            this.btnEditarEquipas.Text = "Editar Equipas";
+            this.btnEditarEquipas.UseVisualStyleBackColor = true;
+            this.btnEditarEquipas.Click += new System.EventHandler(this.btnEditarEquipas_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(515, 490);
+            this.Controls.Add(this.btnEditarEquipas);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.lblJogoAtual);
             this.Controls.Add(this.btnTerminar);
@@ -190,6 +202,7 @@
         private System.Windows.Forms.Button btnTerminar;
         private System.Windows.Forms.Label lblJogoAtual;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnEditarEquipas;
     }
 }
 

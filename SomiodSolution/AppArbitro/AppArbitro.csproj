@@ -101,6 +101,12 @@
     <Compile Include="FormCartao.Designer.cs">
       <DependentUpon>FormCartao.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormEditarEquipas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormEditarEquipas.Designer.cs">
+      <DependentUpon>FormEditarEquipas.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormGolo.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -122,6 +128,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormCartao.resx">
       <DependentUpon>FormCartao.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormEditarEquipas.resx">
+      <DependentUpon>FormEditarEquipas.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormGolo.resx">
       <DependentUpon>FormGolo.cs</DependentUpon>

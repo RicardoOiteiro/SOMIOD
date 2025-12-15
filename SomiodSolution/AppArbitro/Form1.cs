@@ -88,6 +88,7 @@ namespace AppArbitro
                 SetJogoUIVisible(false);
 
                 SetStartUIVisible(true);
+                btnIniciarJogo.Enabled = true;
                 btnTerminar.Enabled = true;
 
                 txtEquipaA.Clear();
@@ -182,6 +183,48 @@ namespace AppArbitro
             }
         }
 
+        private async void btnEditarEquipas_Click(object sender, EventArgs e)
+        {
+            if (_appName == null)
+            {
+                MessageBox.Show("Nenhum jogo iniciado.");
+                return;
+            }
+
+            using (var f = new FormEditarEquipas(
+                txtEquipaA.Text.Trim(),
+                txtEquipaB.Text.Trim()))
+            {
+                if (f.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                string novoAppName = BuildAppName(f.EquipaA, f.EquipaB);
+
+                if (string.Equals(novoAppName, _appName, StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("O nome do jogo não mudou.");
+                    return;
+                }
+
+                btnEditarEquipas.Enabled = false;
+
+                bool ok = await PutApplicationAsync(_appName, novoAppName);
+
+                if (ok)
+                {
+                    _appName = novoAppName;
+
+                    txtEquipaA.Text = f.EquipaA;
+                    txtEquipaB.Text = f.EquipaB;
+                    lblJogoAtual.Text = $" {_appName}";
+
+                    MessageBox.Show("Equipas atualizadas com sucesso!");
+                }
+
+                btnEditarEquipas.Enabled = true;
+            }
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             SetStartUIVisible(true);
@@ -197,6 +240,7 @@ namespace AppArbitro
             btnCartao.Visible = visible;
             btnSub.Visible = visible;
             btnTerminar.Visible = visible;
+            btnEditarEquipas.Visible = visible;
         }
 
         private void SetStartUIVisible(bool visible)
@@ -272,7 +316,7 @@ namespace AppArbitro
                 { "content", payloadJson }
             };
 
-            // no teu middleware: POST /api/somiod/{appName}/{contName}
+            // no middleware: POST /api/somiod/{appName}/{contName}
             var req = new RestRequest($"api/somiod/{_appName}/{ContainerName}", Method.Post);
             req.AddHeader("Content-Type", "application/json");
             req.AddJsonBody(body);
@@ -284,22 +328,6 @@ namespace AppArbitro
             MessageBox.Show($"Falha a publicar evento {ciName}.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
             return false;
         }
-
-        /*private async System.Threading.Tasks.Task<bool> DeleteApplicationAsync(string appName)
-        {
-            var client = MakeClient();
-
-            var req = new RestRequest($"api/somiod/{appName}", Method.Delete);
-            var res = await client.ExecuteAsync(req);
-
-            if (res.IsSuccessful) return true;
-
-            // 404 (já não existe) -> para reset UI, aceitável
-            if ((int)res.StatusCode == 404) return true;
-
-            MessageBox.Show($"Falha ao terminar jogo.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
-            return false;
-        }*/
 
         private async System.Threading.Tasks.Task<bool> TerminateGameCascadeAsync(string appName)
         {
@@ -367,6 +395,29 @@ namespace AppArbitro
             return s;
         }
 
+        private async System.Threading.Tasks.Task<bool> PutApplicationAsync(string oldAppName, string newAppName)
+        {
+            var client = MakeClient();
+
+            // Mantém o mesmo estilo do teu POST (resource-name)
+            var body = new Dictionary<string, object>
+    {
+        { "resource-name", newAppName }
+    };
+
+            var req = new RestRequest($"api/somiod/{oldAppName}", Method.Put);
+            req.AddHeader("Content-Type", "application/json");
+            req.AddJsonBody(body);
+
+            var res = await client.ExecuteAsync(req);
+
+            if (res.IsSuccessful) return true;
+
+            MessageBox.Show($"Falha a atualizar Application.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
+            return false;
+        }
+
         #endregion
+
     }
 }
