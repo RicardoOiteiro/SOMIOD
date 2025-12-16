@@ -21,59 +21,32 @@ namespace Somiod.Controllers
 
         #region APPLICATION
 
+
         // GET api/somiod/{appName}
         [HttpGet]
         [Route("{appName}")]
         public IHttpActionResult GetApplication(string appName)
         {
-            // verificar se é discovery
+            //é discovery?
             var hasHeader = Request.Headers.Contains("somiod-discovery");
-            var headerValue = hasHeader
-                ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault()
-                : null;
+            var headerValue = hasHeader ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault() : null;
 
-            // discovery containers
-            if (hasHeader && string.Equals(headerValue, "container", StringComparison.OrdinalIgnoreCase))
+            // discovery
+            if (hasHeader && !string.IsNullOrWhiteSpace(headerValue))
             {
-                List<string> paths = new List<string>();
-                SqlConnection conn = null;
+                if (headerValue.Equals("container", StringComparison.OrdinalIgnoreCase))
+                    return DiscoverContainersInApp(appName);
 
-                try
-                {
-                    conn = new SqlConnection(connectionString);
-                    conn.Open();
+                if (headerValue.Equals("content-instance", StringComparison.OrdinalIgnoreCase))
+                    return DiscoverContentInstancesInApp(appName);
 
-                    SqlCommand cmd = new SqlCommand(
-                        @"SELECT c.ResourceName
-                  FROM Containers c
-                  INNER JOIN Application a ON c.Application_ID = a.Id
-                  WHERE a.ResourceName = @appName
-                  ORDER BY c.Id", conn);
+                if (headerValue.Equals("subscription", StringComparison.OrdinalIgnoreCase))
+                    return DiscoverSubscriptionsInApp(appName);
 
-                    cmd.Parameters.AddWithValue("@appName", appName);
-
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    while (reader.Read())
-                    {
-                        string contName = (string)reader["ResourceName"];
-                        paths.Add($"/api/somiod/{appName}/{contName}");
-                    }
-
-                    reader.Close();
-                    conn.Close();
-
-                    return Ok(paths);
-                }
-                catch (Exception e)
-                {
-                    if (conn != null && conn.State == System.Data.ConnectionState.Open)
-                        conn.Close();
-                    return InternalServerError(e);
-                }
+                return BadRequest("somiod-discovery deve ser: container | content-instance | subscription");
             }
 
-            // GET APPLICATION normal
+            // GET APPLICATION normal 
             Application app = null;
             SqlConnection connApp = null;
 
@@ -114,6 +87,7 @@ namespace Somiod.Controllers
 
             return Ok(app);
         }
+
 
         // POST api/somiod
         [HttpPost]
@@ -160,7 +134,9 @@ namespace Somiod.Controllers
 
                 conn.Close();
 
-                return Ok("Aplicação inserida com sucesso!");
+                //return Ok("Aplicação inserida com sucesso!");
+                var location = new Uri(Request.RequestUri, $"api/somiod/{app.ResourceName}");
+                return Created(location, app);
             }
             catch (Exception e)
             {
@@ -168,7 +144,7 @@ namespace Somiod.Controllers
                     conn.Close();
 
                 Console.WriteLine(e.Message);
-                return BadRequest("Erro ao criar a aplicação");
+                return InternalServerError(e);
             }
         }
 
@@ -205,7 +181,9 @@ namespace Somiod.Controllers
                 if (rows == 0)
                     return NotFound();
 
-                return Ok("Aplicação atualizada com sucesso!");
+                //return Ok("Aplicação atualizada com sucesso!");
+                app.ResType = "application"; // opcional
+                return Ok(app);
             }
             catch (Exception e)
             {
@@ -213,7 +191,7 @@ namespace Somiod.Controllers
                     conn.Close();
 
                 Console.WriteLine(e.Message);
-                return BadRequest("Erro ao atualizar a aplicação");
+                return InternalServerError(e);
             }
         }
 
@@ -254,53 +232,7 @@ namespace Somiod.Controllers
                 return BadRequest("Erro ao excluir a aplicação");
             }
         }
-
-        // GET api/somiod  discovery applications)
-        [HttpGet]
-        [Route("")]
-        public IHttpActionResult DiscoverApplications()
-        {
-            var hasHeader = Request.Headers.Contains("somiod-discovery");
-            var headerValue = hasHeader
-                ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault()
-                : null;
-
-            if (!hasHeader || !string.Equals(headerValue, "application", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("Use header 'somiod-discovery: application' para discovery de applications.");
-
-            List<string> paths = new List<string>();
-            SqlConnection conn = null;
-
-            try
-            {
-                conn = new SqlConnection(connectionString);
-                conn.Open();
-
-                SqlCommand command =
-                    new SqlCommand("SELECT ResourceName FROM Application ORDER BY Id", conn);
-
-                SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    string name = (string)reader["ResourceName"];
-                    paths.Add($"/api/somiod/{name}");
-                }
-
-                reader.Close();
-                conn.Close();
-
-                return Ok(paths);
-            }
-            catch (Exception e)
-            {
-                if (conn != null && conn.State == System.Data.ConnectionState.Open)
-                    conn.Close();
-
-                Console.WriteLine(e.Message);
-                return InternalServerError(e);
-            }
-        }
+        
 
         #endregion
 
@@ -421,7 +353,9 @@ namespace Somiod.Controllers
                 c.Id = Convert.ToInt32(insertCmd.ExecuteScalar());
 
                 conn.Close();
-                return Ok("Container inserido com sucesso!");
+                //return Ok("Container inserido com sucesso!");
+                var location = new Uri(Request.RequestUri, $"api/somiod/{appName}/{c.ResourceName}");
+                return Created(location, c);
             }
             catch (Exception e)
             {
@@ -432,6 +366,8 @@ namespace Somiod.Controllers
                 return InternalServerError(e);
             }
         }
+
+        
 
         // PUT api/somiod/{appName}/{contName}
         [HttpPut]
@@ -467,7 +403,9 @@ namespace Somiod.Controllers
                 if (rows == 0)
                     return NotFound();
 
-                return Ok("Container atualizado com sucesso!");
+                //return Ok("Container atualizado com sucesso!");
+                c.ResType = "container"; 
+                return Ok(c);
             }
             catch (Exception e)
             {
@@ -604,7 +542,9 @@ namespace Somiod.Controllers
                 conn.Close();
 
                 NotifySubscribers(appName, contName, ci, 1);
-                return Ok("Content-instance inserida com sucesso!");
+                //return Ok("Content-instance inserida com sucesso!");
+                var location = new Uri(Request.RequestUri, $"api/somiod/{appName}/{contName}/{ci.ResourceName}");
+                return Created(location, ci);
             }
             catch (Exception e)
             {
@@ -691,7 +631,7 @@ namespace Somiod.Controllers
                       FROM ContentInstances ci
                       INNER JOIN Containers c ON ci.Container_ID = c.Id
                       INNER JOIN Application a ON c.Application_ID = a.Id
-                      WHERE a.ResourceName=@@appName AND c.ResourceName=@@contName AND ci.ResourceName=@ciName", conn);
+                      WHERE a.ResourceName=@appName AND c.ResourceName=@contName AND ci.ResourceName=@ciName", conn);
 
                 selectCmd.Parameters.AddWithValue("@appName", appName);
                 selectCmd.Parameters.AddWithValue("@contName", contName);
@@ -728,7 +668,7 @@ namespace Somiod.Controllers
                 conn.Close();
 
                 NotifySubscribers(appName, contName, ciDeleted, 2);
-                return Ok("Content-instance '{ciName}' eliminada com sucesso.");
+                return Ok($"Content-instance '{ciName}' eliminada com sucesso.");
             }
             catch (Exception e)
             {
@@ -753,13 +693,13 @@ namespace Somiod.Controllers
 
                 // ir buscar subscriptions do container com o evt correto
                 SqlCommand cmd = new SqlCommand(
-                    @"SELECT s.ResourceName, s.Evt, s.Endpoint
-            FROM Subscriptions s
-            INNER JOIN Containers c ON s.Container_ID = c.Id
-            INNER JOIN Application a ON c.Application_ID = a.Id
-            WHERE a.ResourceName = @appName
-            AND c.ResourceName = @contName
-            AND s.Evt = @evt", conn);
+                            @"SELECT s.ResourceName, s.Evt, s.Endpoint
+                    FROM Subscriptions s
+                    INNER JOIN Containers c ON s.Container_ID = c.Id
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    WHERE a.ResourceName = @appName
+                    AND c.ResourceName = @contName
+                    AND s.Evt = @evt", conn);
 
                 cmd.Parameters.AddWithValue("@appName", appName);
                 cmd.Parameters.AddWithValue("@contName", contName);
@@ -971,7 +911,9 @@ namespace Somiod.Controllers
 
                 conn.Close();
 
-                return Ok("Subscription criada com sucesso!");
+                //return Ok("Subscription criada com sucesso!");
+                var location = new Uri(Request.RequestUri, $"api/somiod/{appName}/{contName}/subs/{sub.ResourceName}");
+                return Created(location, sub);
             }
             catch (Exception e)
             {
@@ -1084,6 +1026,252 @@ namespace Somiod.Controllers
                 if (conn != null && conn.State == System.Data.ConnectionState.Open)
                     conn.Close();
                 Console.WriteLine(e.Message);
+                return InternalServerError(e);
+            }
+        }
+
+        #endregion
+
+        #region DISCOVERY
+        // GET api/somiod  (discovery)
+        [HttpGet]
+        [Route("")]
+        public IHttpActionResult DiscoverRoot()
+        {
+            var hasHeader = Request.Headers.Contains("somiod-discovery");
+            var headerValue = hasHeader ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault() : null;
+            if (!hasHeader || string.IsNullOrWhiteSpace(headerValue))
+                return BadRequest("Header 'somiod-discovery' é obrigatório.");
+
+            if (headerValue.Equals("application", StringComparison.OrdinalIgnoreCase))
+                return DiscoverApplicationsInternal();
+
+            if (headerValue.Equals("content-instance", StringComparison.OrdinalIgnoreCase))
+                return DiscoverAllContentInstancesInternal();
+
+            if (headerValue.Equals("subscription", StringComparison.OrdinalIgnoreCase))
+                return DiscoverAllSubscriptionsInternal();
+
+            return BadRequest("somiod-discovery deve ser: application | content-instance | subscription");
+        }
+
+        private IHttpActionResult DiscoverContainersInApp(string appName)
+        {
+            var paths = new List<string>();
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                var cmd = new SqlCommand(@"
+                    SELECT c.ResourceName
+                    FROM Containers c
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    WHERE a.ResourceName = @appName
+                    ORDER BY c.Id;", conn);
+
+                cmd.Parameters.AddWithValue("@appName", appName);
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var cont = (string)reader["ResourceName"];
+                    paths.Add($"api/somiod/{appName}/{cont}");
+                }
+
+                reader.Close();
+                conn.Close();
+
+                return Ok(paths);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open) conn.Close();
+                return InternalServerError(e);
+            }
+        }
+
+        private IHttpActionResult DiscoverContentInstancesInApp(string appName)
+        {
+            var paths = new List<string>();
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                var cmd = new SqlCommand(@"
+                    SELECT c.ResourceName AS Cont, ci.ResourceName AS Ci
+                    FROM ContentInstances ci
+                    INNER JOIN Containers c ON ci.Container_ID = c.Id
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    WHERE a.ResourceName = @appName
+                    ORDER BY c.Id, ci.Id;", conn);
+
+                cmd.Parameters.AddWithValue("@appName", appName);
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var cont = (string)reader["Cont"];
+                    var ci = (string)reader["Ci"];
+                    paths.Add($"api/somiod/{appName}/{cont}/{ci}");
+                }
+
+                reader.Close();
+                conn.Close();
+
+                return Ok(paths);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open) conn.Close();
+                return InternalServerError(e);
+            }
+        }
+
+
+
+        private IHttpActionResult DiscoverSubscriptionsInApp(string appName)
+        {
+            var paths = new List<string>();
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                var cmd = new SqlCommand(@"
+                    SELECT c.ResourceName AS Cont, s.ResourceName AS Sub
+                    FROM Subscriptions s
+                    INNER JOIN Containers c ON s.Container_ID = c.Id
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    WHERE a.ResourceName = @appName
+                    ORDER BY c.Id, s.Id;", conn);
+
+                cmd.Parameters.AddWithValue("@appName", appName);
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var cont = (string)reader["Cont"];
+                    var sub = (string)reader["Sub"];
+                    paths.Add($"api/somiod/{appName}/{cont}/subs/{sub}");
+                }
+
+                reader.Close();
+                conn.Close();
+
+                return Ok(paths);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open) conn.Close();
+                return InternalServerError(e);
+            }
+        }
+
+        private IHttpActionResult DiscoverApplicationsInternal()
+        {
+            var paths = new List<string>();
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                var cmd = new SqlCommand("SELECT ResourceName FROM Application ORDER BY Id", conn);
+                var reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                    paths.Add($"api/somiod/{(string)reader["ResourceName"]}");
+
+                reader.Close();
+                conn.Close();
+                return Ok(paths);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open) conn.Close();
+                return InternalServerError(e);
+            }
+        }
+
+        private IHttpActionResult DiscoverAllContentInstancesInternal()
+        {
+            var paths = new List<string>();
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                var cmd = new SqlCommand(@"
+                    SELECT a.ResourceName AS App, c.ResourceName AS Cont, ci.ResourceName AS Ci
+                    FROM ContentInstances ci
+                    INNER JOIN Containers c ON ci.Container_ID = c.Id
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    ORDER BY a.Id, c.Id, ci.Id;", conn);
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var app = (string)reader["App"];
+                    var cont = (string)reader["Cont"];
+                    var ci = (string)reader["Ci"];
+                    paths.Add($"api/somiod/{app}/{cont}/{ci}");
+                }
+
+                reader.Close();
+                conn.Close();
+                return Ok(paths);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open) conn.Close();
+                return InternalServerError(e);
+            }
+        }
+
+        private IHttpActionResult DiscoverAllSubscriptionsInternal()
+        {
+            var paths = new List<string>();
+            SqlConnection conn = null;
+
+            try
+            {
+                conn = new SqlConnection(connectionString);
+                conn.Open();
+
+                var cmd = new SqlCommand(@"
+                    SELECT a.ResourceName AS App, c.ResourceName AS Cont, s.ResourceName AS Sub
+                    FROM Subscriptions s
+                    INNER JOIN Containers c ON s.Container_ID = c.Id
+                    INNER JOIN Application a ON c.Application_ID = a.Id
+                    ORDER BY a.Id, c.Id, s.Id;", conn);
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var app = (string)reader["App"];
+                    var cont = (string)reader["Cont"];
+                    var sub = (string)reader["Sub"];
+                    paths.Add($"api/somiod/{app}/{cont}/subs/{sub}");
+                }
+
+                reader.Close();
+                conn.Close();
+                return Ok(paths);
+            }
+            catch (Exception e)
+            {
+                if (conn != null && conn.State == System.Data.ConnectionState.Open) conn.Close();
                 return InternalServerError(e);
             }
         }

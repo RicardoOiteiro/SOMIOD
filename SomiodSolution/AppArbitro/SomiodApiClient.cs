@@ -6,6 +6,9 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+
+// ---- CASO NAO USAR O RESTSHARP
+
 namespace AppArbitro
 {
 
@@ -28,7 +31,7 @@ namespace AppArbitro
 
         public async Task<ApiResult> CreateApplicationAsync(string appName)
         {
-            // JSON com o nome esperado pelo teu model: "resource-name"
+            // JSON com o nome esperado no model "resource-name"
             var json = $"{{\"resource-name\":\"{appName}\"}}";
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -48,8 +51,8 @@ namespace AppArbitro
             var json = $"{{\"resource-name\":\"{contName}\"}}";
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            // no teu controller: POST api/somiod/{appName}/containers
-            var resp = await _http.PostAsync($"api/somiod/{appName}/containers", content);
+            // no controller: POST api/somiod/{appName}
+            var resp = await _http.PostAsync($"api/somiod/{appName}", content);
             var body = await resp.Content.ReadAsStringAsync();
 
             return new ApiResult
@@ -75,7 +78,7 @@ namespace AppArbitro
                 }}";
 
             var resp = await _http.PostAsync(
-                $"api/somiod/{appName}/{contName}/contents",
+                $"api/somiod/{appName}/{contName}",
                 new StringContent(json, Encoding.UTF8, "application/json"));
 
             var bodyResp = await resp.Content.ReadAsStringAsync();

@@ -50,14 +50,14 @@
             // 
             // txtSai
             // 
-            this.txtSai.Location = new System.Drawing.Point(88, 57);
+            this.txtSai.Location = new System.Drawing.Point(109, 52);
             this.txtSai.Name = "txtSai";
             this.txtSai.Size = new System.Drawing.Size(100, 20);
             this.txtSai.TabIndex = 1;
             // 
             // txtEntra
             // 
-            this.txtEntra.Location = new System.Drawing.Point(88, 108);
+            this.txtEntra.Location = new System.Drawing.Point(109, 95);
             this.txtEntra.Name = "txtEntra";
             this.txtEntra.Size = new System.Drawing.Size(100, 20);
             this.txtEntra.TabIndex = 2;
@@ -65,24 +65,24 @@
             // cbEquipa
             // 
             this.cbEquipa.FormattingEnabled = true;
-            this.cbEquipa.Location = new System.Drawing.Point(89, 155);
+            this.cbEquipa.Location = new System.Drawing.Point(89, 139);
             this.cbEquipa.Name = "cbEquipa";
             this.cbEquipa.Size = new System.Drawing.Size(121, 21);
             this.cbEquipa.TabIndex = 3;
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(19, 182);
+            this.btnOk.Location = new System.Drawing.Point(32, 182);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 5;
-            this.btnOk.Text = "Ok";
+            this.btnOk.Text = "Submeter";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancelar
             // 
-            this.btnCancelar.Location = new System.Drawing.Point(113, 182);
+            this.btnCancelar.Location = new System.Drawing.Point(134, 182);
             this.btnCancelar.Name = "btnCancelar";
             this.btnCancelar.Size = new System.Drawing.Size(75, 23);
             this.btnCancelar.TabIndex = 6;
@@ -102,7 +102,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 60);
+            this.label2.Location = new System.Drawing.Point(29, 55);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(66, 13);
             this.label2.TabIndex = 8;
@@ -111,7 +111,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 111);
+            this.label3.Location = new System.Drawing.Point(29, 98);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(76, 13);
             this.label3.TabIndex = 9;
@@ -120,7 +120,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(29, 158);
+            this.label4.Location = new System.Drawing.Point(29, 142);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(43, 13);
             this.label4.TabIndex = 10;

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualBasic;
+using AppArbitro.Dtos;
 
 namespace AppArbitro
 {
@@ -259,20 +260,19 @@ namespace AppArbitro
         {
             var client = MakeClient();
 
-            var body = new Dictionary<string, object>
+            var body = new ApplicationDto
             {
-                { "resource-name", appName }
+                ResourceName = appName
             };
 
             var req = new RestRequest("api/somiod", Method.Post);
-            req.AddHeader("Content-Type", "application/json");
             req.AddJsonBody(body);
 
             var res = await client.ExecuteAsync(req);
 
             if (res.IsSuccessful) return true;
 
-            // 409 = já existe -> aceitável
+            // 409 = já existe 
             if ((int)res.StatusCode == 409) return true;
 
             MessageBox.Show($"Falha a criar Application.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
@@ -283,21 +283,19 @@ namespace AppArbitro
         {
             var client = MakeClient();
 
-            var body = new Dictionary<string, object>
+            var body = new ContainerDto
             {
-                { "resource-name", contName }
+                ResourceName = contName
             };
 
-            // no teu middleware: POST /api/somiod/{appName}
             var req = new RestRequest($"api/somiod/{appName}", Method.Post);
-            req.AddHeader("Content-Type", "application/json");
             req.AddJsonBody(body);
 
             var res = await client.ExecuteAsync(req);
 
             if (res.IsSuccessful) return true;
 
-            // 409 = já existe -> aceitável
+            // 409 = já existe 
             if ((int)res.StatusCode == 409) return true;
 
             MessageBox.Show($"Falha a criar Container.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
@@ -309,16 +307,14 @@ namespace AppArbitro
             var client = MakeClient();
             string payloadJson = JsonConvert.SerializeObject(payloadObj);
 
-            var body = new Dictionary<string, object>
+            var body = new ContentInstanceDto
             {
-                { "resource-name", ciName },
-                { "content-type", "application/json" },
-                { "content", payloadJson }
+                ResourceName = ciName,
+                ContentType = "application/json",
+                Content = payloadJson
             };
 
-            // no middleware: POST /api/somiod/{appName}/{contName}
             var req = new RestRequest($"api/somiod/{_appName}/{ContainerName}", Method.Post);
-            req.AddHeader("Content-Type", "application/json");
             req.AddJsonBody(body);
 
             var res = await client.ExecuteAsync(req);
@@ -399,14 +395,12 @@ namespace AppArbitro
         {
             var client = MakeClient();
 
-            // Mantém o mesmo estilo do teu POST (resource-name)
-            var body = new Dictionary<string, object>
-    {
-        { "resource-name", newAppName }
-    };
+            var body = new ApplicationDto
+            {
+                ResourceName = newAppName
+            };
 
             var req = new RestRequest($"api/somiod/{oldAppName}", Method.Put);
-            req.AddHeader("Content-Type", "application/json");
             req.AddJsonBody(body);
 
             var res = await client.ExecuteAsync(req);

@@ -43,14 +43,14 @@
             // 
             // numMinuto
             // 
-            this.numMinuto.Location = new System.Drawing.Point(67, 7);
+            this.numMinuto.Location = new System.Drawing.Point(89, 9);
             this.numMinuto.Name = "numMinuto";
             this.numMinuto.Size = new System.Drawing.Size(120, 20);
             this.numMinuto.TabIndex = 0;
             // 
             // txtJogador
             // 
-            this.txtJogador.Location = new System.Drawing.Point(67, 53);
+            this.txtJogador.Location = new System.Drawing.Point(109, 52);
             this.txtJogador.Name = "txtJogador";
             this.txtJogador.Size = new System.Drawing.Size(100, 20);
             this.txtJogador.TabIndex = 1;
@@ -58,7 +58,7 @@
             // cbEquipa
             // 
             this.cbEquipa.FormattingEnabled = true;
-            this.cbEquipa.Location = new System.Drawing.Point(71, 105);
+            this.cbEquipa.Location = new System.Drawing.Point(88, 95);
             this.cbEquipa.Name = "cbEquipa";
             this.cbEquipa.Size = new System.Drawing.Size(121, 21);
             this.cbEquipa.TabIndex = 2;
@@ -66,24 +66,24 @@
             // cbTipoCartao
             // 
             this.cbTipoCartao.FormattingEnabled = true;
-            this.cbTipoCartao.Location = new System.Drawing.Point(74, 148);
+            this.cbTipoCartao.Location = new System.Drawing.Point(88, 139);
             this.cbTipoCartao.Name = "cbTipoCartao";
             this.cbTipoCartao.Size = new System.Drawing.Size(121, 21);
             this.cbTipoCartao.TabIndex = 3;
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(44, 175);
+            this.btnOk.Location = new System.Drawing.Point(32, 182);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 4;
-            this.btnOk.Text = "Ok";
+            this.btnOk.Text = "Submeter";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancelar
             // 
-            this.btnCancelar.Location = new System.Drawing.Point(136, 175);
+            this.btnCancelar.Location = new System.Drawing.Point(134, 182);
             this.btnCancelar.Name = "btnCancelar";
             this.btnCancelar.Size = new System.Drawing.Size(75, 23);
             this.btnCancelar.TabIndex = 5;
@@ -94,7 +94,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(19, 9);
+            this.label1.Location = new System.Drawing.Point(29, 11);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(42, 13);
             this.label1.TabIndex = 8;
@@ -103,7 +103,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(22, 108);
+            this.label4.Location = new System.Drawing.Point(29, 98);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(43, 13);
             this.label4.TabIndex = 11;
@@ -112,16 +112,17 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(19, 56);
+            this.label2.Location = new System.Drawing.Point(29, 55);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(48, 13);
             this.label2.TabIndex = 12;
             this.label2.Text = "Jogador:";
+            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(22, 151);
+            this.label3.Location = new System.Drawing.Point(29, 142);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(41, 13);
             this.label3.TabIndex = 13;
