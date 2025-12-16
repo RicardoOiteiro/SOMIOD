@@ -783,7 +783,8 @@ namespace Somiod.Controllers
             {
                 resource = $"/api/somiod/{appName}/{contName}/{ci.ResourceName}",
                 eventType = (evt == 1 ? "creation" : "deletion"),
-                timestamp = DateTime.UtcNow.ToString("o")
+                timestamp = DateTime.UtcNow.ToString("o"),
+                content = ci.Content
             };
 
             string json = JsonConvert.SerializeObject(payloadObj);

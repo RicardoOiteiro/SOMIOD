@@ -1,6 +1,6 @@
 ﻿namespace AppSubscritor
 {
-    partial class Form1
+    partial class FormJogo
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormJogo));
             this.lblEquipaA = new System.Windows.Forms.Label();
             this.lblEquipaB = new System.Windows.Forms.Label();
             this.lblScoreA = new System.Windows.Forms.Label();
@@ -40,7 +40,9 @@
             this.listViewEvents = new System.Windows.Forms.ListView();
             this.Min = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Evento = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.Detalhes = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Jogador = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.btnProcurarJogo = new System.Windows.Forms.Button();
+            this.labelJogo = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // lblEquipaA
@@ -96,7 +98,7 @@
             // 
             this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
             this.imageList1.TransparentColor = System.Drawing.Color.Black;
-            this.imageList1.Images.SetKeyName(0, "goal");
+            this.imageList1.Images.SetKeyName(0, "golo");
             this.imageList1.Images.SetKeyName(1, "subs");
             this.imageList1.Images.SetKeyName(2, "yellow_card");
             this.imageList1.Images.SetKeyName(3, "doubleyellow_card");
@@ -115,9 +117,9 @@
             // listViewEvents
             // 
             this.listViewEvents.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.Min,
             this.Evento,
-            this.Detalhes});
+            this.Jogador,
+            this.Min});
             this.listViewEvents.FullRowSelect = true;
             this.listViewEvents.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
             this.listViewEvents.HideSelection = false;
@@ -132,21 +134,45 @@
             // 
             // Min
             // 
+            this.Min.DisplayIndex = 0;
             this.Min.Width = 100;
             // 
             // Evento
             // 
-            this.Evento.Width = 0;
+            this.Evento.DisplayIndex = 1;
+            this.Evento.Width = 50;
             // 
-            // Detalhes
+            // Jogador
             // 
-            this.Detalhes.Width = 220;
+            this.Jogador.DisplayIndex = 2;
+            this.Jogador.Width = 220;
             // 
-            // Form1
+            // btnProcurarJogo
+            // 
+            this.btnProcurarJogo.Location = new System.Drawing.Point(751, 193);
+            this.btnProcurarJogo.Name = "btnProcurarJogo";
+            this.btnProcurarJogo.Size = new System.Drawing.Size(84, 94);
+            this.btnProcurarJogo.TabIndex = 21;
+            this.btnProcurarJogo.Text = "Procurar jogo";
+            this.btnProcurarJogo.UseVisualStyleBackColor = true;
+            this.btnProcurarJogo.Click += new System.EventHandler(this.btnProcurarJogo_Click);
+            // 
+            // labelJogo
+            // 
+            this.labelJogo.AutoSize = true;
+            this.labelJogo.Location = new System.Drawing.Point(421, 27);
+            this.labelJogo.Name = "labelJogo";
+            this.labelJogo.Size = new System.Drawing.Size(35, 13);
+            this.labelJogo.TabIndex = 22;
+            this.labelJogo.Text = "label1";
+            // 
+            // FormJogo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1321, 685);
+            this.Controls.Add(this.labelJogo);
+            this.Controls.Add(this.btnProcurarJogo);
             this.Controls.Add(this.listViewEvents);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.TextBoxEventos);
@@ -154,7 +180,7 @@
             this.Controls.Add(this.lblScoreA);
             this.Controls.Add(this.lblEquipaB);
             this.Controls.Add(this.lblEquipaA);
-            this.Name = "Form1";
+            this.Name = "FormJogo";
             this.Text = "Form1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -175,7 +201,9 @@
         private System.Windows.Forms.ListView listViewEvents;
         private System.Windows.Forms.ColumnHeader Min;
         private System.Windows.Forms.ColumnHeader Evento;
-        private System.Windows.Forms.ColumnHeader Detalhes;
+        private System.Windows.Forms.ColumnHeader Jogador;
+        private System.Windows.Forms.Button btnProcurarJogo;
+        private System.Windows.Forms.Label labelJogo;
     }
 }
 
