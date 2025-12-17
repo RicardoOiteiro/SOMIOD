@@ -97,6 +97,7 @@
             this.Controls.Add(this.btnProcurarJogo);
             this.Name = "FormEscolherJogo";
             this.Text = "FormEscolherJogo";
+            this.Load += new System.EventHandler(this.FormEscolherJogo_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

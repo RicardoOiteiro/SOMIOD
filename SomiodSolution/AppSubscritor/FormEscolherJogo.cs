@@ -50,12 +50,7 @@ namespace AppSubscritor
         {
          
             String Jogo = labelSelectedGame.Text;
-            String labeldefault = "Nenhum jogo selecionado";
-            if (string.Equals(Jogo, labeldefault))
-            {
-                MessageBox.Show("Seleciona um jogo válido.");
-                return;
-            }
+            
            
             // Remove numeração "1. "
     
@@ -80,7 +75,13 @@ namespace AppSubscritor
             if (listBoxJogos.SelectedItem != null)
             {
                 labelSelectedGame.Text = listBoxJogos.SelectedItem.ToString();
+                btnVerJogo.Visible = true;
             }
+        }
+
+        private void FormEscolherJogo_Load(object sender, EventArgs e)
+        {
+            btnVerJogo.Visible = false;
         }
     }
 

@@ -25,6 +25,9 @@ namespace AppSubscritor
         //string[] mStrTopicsInfo = { "api/somiod/stadiumApp/events", "estg_pl" };
         private readonly string _appName;
         private string[] topics;
+        private string[] cartoes;
+        private int ncartoes = 0;
+        private string equipaCasa, equipaFora;
 
 
         public FormJogo(string appName)
@@ -36,7 +39,6 @@ namespace AppSubscritor
                 $"api/somiod/{_appName}/golos",
                 $"api/somiod/{_appName}/cartoes",
                 $"api/somiod/{_appName}/substituicoes",
-                $"api/somiod/{_appName}/eventos"
             };
         }
 
@@ -59,13 +61,38 @@ namespace AppSubscritor
         {
 
         }
-        void AddEvento(string tipo,int minuto, string jogador,string equipa)
+        void AddEvento(string tipo,int minuto, string jogador,string equipa,string tipocartao)
         {
 
+            if(tipocartao != null)
+            {
+                 
+                if(String.Equals(tipocartao.Trim(), "amarelo"))
+                {
+                    tipo = tipocartao.ToLower();
+
+                    for (int i = 0; i < ncartoes; i++)
+                    {
+                        if (String.Equals(cartoes[i].Trim(), jogador.Trim()))
+                        {
+                            tipo = "duploamarelo";
+                            break;
+                        }
+                    }
+                }
+                else if(String.Equals(tipocartao.Trim(), "vermelho"))
+                {
+                    tipo = tipocartao.ToLower();
+                }
+                cartoes[ncartoes] = jogador.Trim();
+                ncartoes += 1;
+
+            }
+            equipa = equipa.ToLower();
+           
 
 
 
-            // tipo: "goal", "yellow", "red", "sub"
             var item = new ListViewItem("");          // 1ª coluna "Evento" (texto vazio)
             
 
@@ -77,31 +104,66 @@ namespace AppSubscritor
 
             item.SubItems.Add(jogador);               // coluna "Jogador"
             item.SubItems.Add(minuto.ToString());     // coluna "Min"
-
-            listViewEvents.Items.Add(item);
-            // auto-scroll para o último
-            listViewEvents.EnsureVisible(listViewEvents.Items.Count - 1);
+            if(String.Equals(equipa.Trim(), equipaCasa.Trim()))
+            {
+                listViewEventsA.Items.Add(item);
+                // auto-scroll para o último
+                listViewEventsA.EnsureVisible(listViewEventsA.Items.Count - 1);   // coluna "Equipa"
+                if(tipo == "golo")
+                {
+                    int golos = int.Parse(lblScoreA.Text);
+                    golos += 1;
+                    lblScoreA.Text = golos.ToString();
+                }
+            }
+            else
+            {
+                listViewEventsB.Items.Add(item);
+                // auto-scroll para o último
+                listViewEventsB.EnsureVisible(listViewEventsB.Items.Count - 1);   // coluna "Equipa"
+                if (tipo == "golo")
+                {
+                    int golos = int.Parse(lblScoreB.Text);
+                    golos += 1;
+                    lblScoreB.Text = golos.ToString();
+                }
+            }
+            
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            listViewEvents.View = View.Details;
-            listViewEvents.FullRowSelect = true;
+            listViewEventsA.View = View.Details;
+            listViewEventsA.FullRowSelect = true;
 
             // Se ainda não criaste colunas no Designer, cria aqui:
-            if (listViewEvents.Columns.Count == 0)
+            if (listViewEventsA.Columns.Count == 0)
             {
-                listViewEvents.Columns.Add("Min", 100);
-                listViewEvents.Columns.Add("Evento", 0);
-                listViewEvents.Columns.Add("Detalhes", 250);
+                listViewEventsA.Columns.Add("Min", 100);
+                listViewEventsA.Columns.Add("Evento", 0);
+                listViewEventsA.Columns.Add("Detalhes", 250);
+            }
+            listViewEventsB.View = View.Details;
+            listViewEventsB.FullRowSelect = true;
+
+            // Se ainda não criaste colunas no Designer, cria aqui:
+            if (listViewEventsB.Columns.Count == 0)
+            {
+                listViewEventsB.Columns.Add("Min", 100);
+                listViewEventsB.Columns.Add("Evento", 0);
+                listViewEventsB.Columns.Add("Detalhes", 250);
             }
             labelJogo.Text = _appName;
 
             
 
             // Garantir que está ligado ao ImageList
-            listViewEvents.SmallImageList = imageList1;
+            listViewEventsA.SmallImageList = imageList1;
+            listViewEventsB.SmallImageList = imageList1;
             mClient.Connect(Guid.NewGuid().ToString());
+            TextBoxEventos.Visible = false;
+            labelJogo.Visible = false;
+            cartoes = new string[200];
             ConnectAndSubscribe();
             StartMatch(_appName);
 
@@ -126,9 +188,27 @@ namespace AppSubscritor
                     {
                         string tipo = contentDoc.RootElement.GetProperty("tipo").GetString();
                         int minuto = contentDoc.RootElement.GetProperty("minuto").GetInt32();
-                        string jogador = contentDoc.RootElement.GetProperty("jogador").GetString();
-                        string equipa = contentDoc.RootElement.GetProperty("equipa").GetString();
-                        AddEvento(tipo, minuto, jogador, equipa);
+                        if (string.Equals(tipo.Trim(), "substituicao"))
+                        {
+                            string jogadorEntrou = contentDoc.RootElement.GetProperty("entra").GetString();
+                            string jogadorSaiu = contentDoc.RootElement.GetProperty("sai").GetString();
+                            string equipa = contentDoc.RootElement.GetProperty("equipa").GetString();
+                            AddEvento(tipo, minuto, $"{jogadorSaiu} -> {jogadorEntrou}", equipa,null);
+                        }
+                        else if (string.Equals(tipo.Trim(), "cartao"))
+                        {
+                            string jogador = contentDoc.RootElement.GetProperty("jogador").GetString();
+                            string equipa = contentDoc.RootElement.GetProperty("equipa").GetString();
+                            string cartao = contentDoc.RootElement.GetProperty("cartao").GetString();
+                            AddEvento(tipo, minuto, jogador, equipa, cartao);
+                        }
+                        else
+                        {
+                            string jogador = contentDoc.RootElement.GetProperty("jogador").GetString();
+                            string equipa = contentDoc.RootElement.GetProperty("equipa").GetString();
+                            AddEvento(tipo, minuto, jogador, equipa,null);
+                        }
+                            
                     }
                 }
 
@@ -142,8 +222,8 @@ namespace AppSubscritor
 
             string[] equipas = appName.Split('-');
 
-            string equipaCasa = equipas[1];   
-            string equipaFora = equipas[2];   
+            equipaCasa = equipas[1];   
+            equipaFora = equipas[2];   
             lblEquipaA.Text = equipaCasa;
             lblEquipaB.Text = equipaFora;
             
@@ -163,7 +243,7 @@ namespace AppSubscritor
         private void button1_Click(object sender, EventArgs e)
         {
             
-            MessageBox.Show(topics[0]);
+            
 
 
         }
@@ -178,7 +258,6 @@ namespace AppSubscritor
         
             mClient.Subscribe(topics, new[]
             {
-                MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE,
                 MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE,
                 MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE,
                 MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE
@@ -203,7 +282,10 @@ namespace AppSubscritor
         {
             
         }
-        
 
+        private void TextBoxEventos_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

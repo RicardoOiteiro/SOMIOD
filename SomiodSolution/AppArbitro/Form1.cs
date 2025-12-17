@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using AppArbitro.Dtos;
+using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.VisualBasic;
-using AppArbitro.Dtos;
 
 namespace AppArbitro
 {
@@ -56,8 +57,11 @@ namespace AppArbitro
             bool okGolos = await CreateContainerAsync(_appName, ContGolos);
             bool okCartoes = await CreateContainerAsync(_appName, ContCartoes);
             bool okSubs = await CreateContainerAsync(_appName, ContSubs);
+            bool okGolosSubs = await CreateSubscriptionAsync(_appName, ContGolos, "sub-golos", 1, $"mqtt://api/somiod/{_appName}/{ContGolos}");
+            bool okCartoesSubs = await CreateSubscriptionAsync(_appName, ContCartoes, "sub-cartoes", 1, $"mqtt://api/somiod/{_appName}/{ContGolos}");
+            bool okSubsSubs = await CreateSubscriptionAsync(_appName, ContSubs, "sub-subs", 1, $"mqtt://api/somiod/{_appName}/{ContGolos}");
 
-            if (!okGolos || !okCartoes || !okSubs)
+            if (!okGolos || !okCartoes || !okSubs || !okGolosSubs || !okCartoesSubs || !okSubsSubs)
             {
                 MessageBox.Show("Application criada, mas falhou a criação de um dos containers (golos/cartoes/substituicoes).");
                 _appName = null;
@@ -330,6 +334,32 @@ namespace AppArbitro
             MessageBox.Show($"Falha a publicar evento {ciName} em '{contName}'.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
             return false;
         }
+
+        private async Task<bool> CreateSubscriptionAsync(string appName, string contName, string subName, int evt, string endpoint)
+        {
+            var client = MakeClient();
+
+            var body = new SubscriptionDto
+            {
+                ResourceName = subName,
+                Evt = evt,
+                Endpoint = endpoint
+            };
+
+            var req = new RestRequest($"api/somiod/{appName}/{contName}/subs", Method.Post);
+            req.AddJsonBody(body);
+
+            var res = await client.ExecuteAsync(req);
+
+            if (res.IsSuccessful) return true;
+
+            // 409 = já existe
+            if ((int)res.StatusCode == 409) return true;
+
+            MessageBox.Show($"Falha a criar Subscription '{subName}' em '{contName}'.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
+            return false;
+        }
+
 
         private async System.Threading.Tasks.Task<bool> TerminateGameCascadeAsync(string appName)
         {
