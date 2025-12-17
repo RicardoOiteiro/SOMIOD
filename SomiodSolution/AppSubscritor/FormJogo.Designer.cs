@@ -45,13 +45,14 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // lblEquipaA
             // 
             this.lblEquipaA.AutoSize = true;
             this.lblEquipaA.Font = new System.Drawing.Font("Verdana", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblEquipaA.Location = new System.Drawing.Point(164, 67);
+            this.lblEquipaA.Location = new System.Drawing.Point(173, 67);
             this.lblEquipaA.Name = "lblEquipaA";
             this.lblEquipaA.Size = new System.Drawing.Size(171, 38);
             this.lblEquipaA.TabIndex = 0;
@@ -62,7 +63,7 @@
             // 
             this.lblEquipaB.AutoSize = true;
             this.lblEquipaB.Font = new System.Drawing.Font("Verdana", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblEquipaB.Location = new System.Drawing.Point(580, 67);
+            this.lblEquipaB.Location = new System.Drawing.Point(563, 67);
             this.lblEquipaB.Name = "lblEquipaB";
             this.lblEquipaB.Size = new System.Drawing.Size(171, 38);
             this.lblEquipaB.TabIndex = 1;
@@ -72,7 +73,7 @@
             // 
             this.lblScoreA.AutoSize = true;
             this.lblScoreA.Font = new System.Drawing.Font("Verdana", 48F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblScoreA.Location = new System.Drawing.Point(365, 43);
+            this.lblScoreA.Location = new System.Drawing.Point(373, 43);
             this.lblScoreA.Name = "lblScoreA";
             this.lblScoreA.Size = new System.Drawing.Size(74, 78);
             this.lblScoreA.TabIndex = 2;
@@ -82,7 +83,7 @@
             // 
             this.lblScoreB.AutoSize = true;
             this.lblScoreB.Font = new System.Drawing.Font("Verdana", 48F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblScoreB.Location = new System.Drawing.Point(483, 43);
+            this.lblScoreB.Location = new System.Drawing.Point(473, 43);
             this.lblScoreB.Name = "lblScoreB";
             this.lblScoreB.Size = new System.Drawing.Size(74, 78);
             this.lblScoreB.TabIndex = 3;
@@ -182,11 +183,22 @@
             this.columnHeader3.DisplayIndex = 0;
             this.columnHeader3.Width = 100;
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 27.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(442, 63);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(30, 42);
+            this.label1.TabIndex = 24;
+            this.label1.Text = "-";
+            // 
             // FormJogo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1009, 591);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.listViewEventsB);
             this.Controls.Add(this.labelJogo);
             this.Controls.Add(this.listViewEventsA);
@@ -221,6 +233,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.Label label1;
     }
 }
 

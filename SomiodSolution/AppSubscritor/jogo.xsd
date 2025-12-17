@@ -1,0 +1,22 @@
+﻿<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="Jogo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="EventoXml" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Tipo" type="xs:string"/>
+							<xs:element name="Minuto" type="xs:int"/>
+							<xs:element name="Equipa" type="xs:string"/>
+							<xs:element name="Jogador" type="xs:string" minOccurs="0"/>
+							<xs:element name="Sai" type="xs:string" minOccurs="0"/>
+							<xs:element name="Entra" type="xs:string" minOccurs="0"/>
+							<xs:element name="Cartao" type="xs:string" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="nome" type="xs:string" use="required"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

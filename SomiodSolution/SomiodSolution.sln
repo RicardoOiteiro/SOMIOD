@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Somiod", "Somiod\Somiod.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppArbitro", "AppArbitro\AppArbitro.csproj", "{87083822-1E60-4368-A271-27EA99D61811}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppSubscritor", "AppSubscritor\AppSubscritor.csproj", "{08F455D0-FF0A-4524-BEAF-B396D2FE4E34}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppAdepto", "AppSubscritor\AppAdepto.csproj", "{08F455D0-FF0A-4524-BEAF-B396D2FE4E34}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

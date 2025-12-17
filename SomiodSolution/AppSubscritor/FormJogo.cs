@@ -1,21 +1,27 @@
-﻿using RestSharp;
+﻿using AppSubscritor.XML;
+using Newtonsoft.Json;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection.Emit;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
-using System.Text.Json;
 
 namespace AppSubscritor
 {
@@ -63,6 +69,7 @@ namespace AppSubscritor
         }
         void AddEvento(string tipo,int minuto, string jogador,string equipa,string tipocartao)
         {
+
 
             if(tipocartao != null)
             {
@@ -131,6 +138,32 @@ namespace AppSubscritor
             
         }
 
+        public string SerializeToXml(EventoXml evento)
+        {
+            var serializer = new XmlSerializer(typeof(EventoXml));
+
+            using (var sw = new StringWriter())
+            {
+                serializer.Serialize(sw, evento);
+                return sw.ToString();
+            }
+        }
+
+
+        private void ValidateXDocument(XDocument doc, string xsdPath)
+        {
+            var schemas = new XmlSchemaSet();
+            schemas.Add("", xsdPath);
+
+            string err = null;
+            doc.Validate(schemas, (o, e) => err = e.Message, true);
+
+            if (err != null)
+                throw new Exception("XML inválido: " + err);
+        }
+
+
+
         private void Form1_Load(object sender, EventArgs e)
         {
             listViewEventsA.View = View.Details;
@@ -161,14 +194,59 @@ namespace AppSubscritor
             listViewEventsA.SmallImageList = imageList1;
             listViewEventsB.SmallImageList = imageList1;
             mClient.Connect(Guid.NewGuid().ToString());
-            TextBoxEventos.Visible = false;
-            labelJogo.Visible = false;
-            cartoes = new string[200];
             ConnectAndSubscribe();
             StartMatch(_appName);
 
 
         }
+
+        private void AppendEventoToGameXml(string appName, EventoXml ev)
+        {
+            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xml");
+            Directory.CreateDirectory(dir);
+
+            string path = Path.Combine(dir, $"{appName}.xml");
+
+            XDocument doc;
+
+            if (File.Exists(path))
+                doc = XDocument.Load(path);
+            else
+                doc = new XDocument(
+                    new XElement("Jogo", new XAttribute("nome", appName))
+                );
+
+            var evEl = new XElement("EventoXml",
+                new XElement("Tipo", ev.Tipo),
+                new XElement("Minuto", ev.Minuto),
+                new XElement("Equipa", ev.Equipa)
+            );
+
+            if (!string.IsNullOrWhiteSpace(ev.Jogador)) evEl.Add(new XElement("Jogador", ev.Jogador));
+            if (!string.IsNullOrWhiteSpace(ev.Sai)) evEl.Add(new XElement("Sai", ev.Sai));
+            if (!string.IsNullOrWhiteSpace(ev.Entra)) evEl.Add(new XElement("Entra", ev.Entra));
+            if (!string.IsNullOrWhiteSpace(ev.Cartao)) evEl.Add(new XElement("Cartao", ev.Cartao));
+
+            doc.Root.Add(evEl);
+
+            // ✅ VALIDAÇÃO FINAL (FASE 6)
+            string xsdPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "jogo.xsd"
+            );
+
+            var schemas = new XmlSchemaSet();
+            schemas.Add("", xsdPath);
+
+            string erro = null;
+            doc.Validate(schemas, (o, e) => erro = e.Message, true);
+
+            if (erro != null)
+                throw new Exception("XML inválido: " + erro);
+
+            doc.Save(path);
+        }
+
 
         void client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
@@ -179,21 +257,45 @@ namespace AppSubscritor
                 string payload = Encoding.UTF8.GetString(e.Message);
                 using (JsonDocument doc = JsonDocument.Parse(payload))
                 {
-                    string content = doc.RootElement
-                                        .GetProperty("content")
-                                        .GetString();
+                    string content = doc.RootElement.GetProperty("content").GetString();
 
                     // JSON interior
                     using (JsonDocument contentDoc = JsonDocument.Parse(content))
                     {
                         string tipo = contentDoc.RootElement.GetProperty("tipo").GetString();
                         int minuto = contentDoc.RootElement.GetProperty("minuto").GetInt32();
+
+
+                        var eventoXml = new EventoXml
+                        {
+                            Tipo = tipo,
+                            Minuto = minuto,
+                            Equipa = TryGetString(contentDoc, "equipa"),
+                            Jogador = TryGetString(contentDoc, "jogador"),
+                            Sai = TryGetString(contentDoc, "sai"),
+                            Entra = TryGetString(contentDoc, "entra"),
+                            Cartao = TryGetString(contentDoc, "cartao")
+                        };
+
+                        // mete caminho correto
+                        // se o xsd estiver no output, podes usar: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "evento.xsd")
+
+                        
+
+
+                        AppendEventoToGameXml(_appName, eventoXml);
+
+                        
+
+
+
+
                         if (string.Equals(tipo.Trim(), "substituicao"))
                         {
                             string jogadorEntrou = contentDoc.RootElement.GetProperty("entra").GetString();
                             string jogadorSaiu = contentDoc.RootElement.GetProperty("sai").GetString();
                             string equipa = contentDoc.RootElement.GetProperty("equipa").GetString();
-                            AddEvento(tipo, minuto, $"{jogadorSaiu} -> {jogadorEntrou}", equipa,null);
+                            AddEvento(tipo, minuto, $"{jogadorSaiu} -> {jogadorEntrou}", equipa, null);
                         }
                         else if (string.Equals(tipo.Trim(), "cartao"))
                         {
@@ -206,7 +308,7 @@ namespace AppSubscritor
                         {
                             string jogador = contentDoc.RootElement.GetProperty("jogador").GetString();
                             string equipa = contentDoc.RootElement.GetProperty("equipa").GetString();
-                            AddEvento(tipo, minuto, jogador, equipa,null);
+                            AddEvento(tipo, minuto, jogador, equipa, null);
                         }
                             
                     }
@@ -214,6 +316,15 @@ namespace AppSubscritor
 
             });
 
+        }
+
+        private string TryGetString(JsonDocument doc, string prop)
+        {
+            JsonElement el;
+            if (doc.RootElement.TryGetProperty(prop, out el) && el.ValueKind == JsonValueKind.String)
+                return el.GetString();
+
+            return null;
         }
 
         private void StartMatch(string appName)
@@ -226,7 +337,10 @@ namespace AppSubscritor
             equipaFora = equipas[2];   
             lblEquipaA.Text = equipaCasa;
             lblEquipaB.Text = equipaFora;
-            
+            TextBoxEventos.Visible = false;
+            labelJogo.Visible = false;
+            cartoes = new string[200];
+
 
 
         }

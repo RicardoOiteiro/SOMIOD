@@ -37,22 +37,24 @@
             // 
             // btnProcurarJogo
             // 
+            this.btnProcurarJogo.BackColor = System.Drawing.SystemColors.Highlight;
             this.btnProcurarJogo.Location = new System.Drawing.Point(60, 23);
             this.btnProcurarJogo.Name = "btnProcurarJogo";
             this.btnProcurarJogo.Size = new System.Drawing.Size(194, 60);
             this.btnProcurarJogo.TabIndex = 0;
             this.btnProcurarJogo.Text = "Procurar Jogo";
-            this.btnProcurarJogo.UseVisualStyleBackColor = true;
+            this.btnProcurarJogo.UseVisualStyleBackColor = false;
             this.btnProcurarJogo.Click += new System.EventHandler(this.btnProcurarJogo_Click);
             // 
             // btnVerJogo
             // 
+            this.btnVerJogo.BackColor = System.Drawing.SystemColors.HotTrack;
             this.btnVerJogo.Location = new System.Drawing.Point(82, 419);
             this.btnVerJogo.Name = "btnVerJogo";
             this.btnVerJogo.Size = new System.Drawing.Size(172, 45);
             this.btnVerJogo.TabIndex = 2;
             this.btnVerJogo.Text = "Ver Jogo";
-            this.btnVerJogo.UseVisualStyleBackColor = true;
+            this.btnVerJogo.UseVisualStyleBackColor = false;
             this.btnVerJogo.Click += new System.EventHandler(this.btnVerJogo_Click);
             // 
             // listBoxJogos
