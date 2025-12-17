@@ -21,7 +21,6 @@ namespace Somiod.Controllers
 
         #region APPLICATION
 
-
         // GET api/somiod/{appName}
         [HttpGet]
         [Route("{appName}")]
@@ -778,7 +777,7 @@ namespace Somiod.Controllers
             if (!client.IsConnected)
                 Debug.WriteLine("Não ligou ao broker");
 
-            //string topic = "api/somiod/stadiumApp/events";   // MESMO tópico do exemplo da aula
+            
             var payloadObj = new
             {
                 resource = $"/api/somiod/{appName}/{contName}/{ci.ResourceName}",

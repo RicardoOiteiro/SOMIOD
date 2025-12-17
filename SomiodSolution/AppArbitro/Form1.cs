@@ -14,7 +14,10 @@ namespace AppArbitro
         private const string BaseUrl = "http://localhost:52047/";
 
         private string _appName = null;
-        private const string ContainerName = "eventos";
+
+        private const string ContGolos = "golos";
+        private const string ContCartoes = "cartoes";
+        private const string ContSubs = "substituicoes";
 
         private int _golos = 0;
         private int _cartoes = 0;
@@ -49,11 +52,14 @@ namespace AppArbitro
                 return;
             }
 
-            //criar container "eventos"
-            bool okCont = await CreateContainerAsync(_appName, ContainerName);
-            if (!okCont)
+            //criar containers
+            bool okGolos = await CreateContainerAsync(_appName, ContGolos);
+            bool okCartoes = await CreateContainerAsync(_appName, ContCartoes);
+            bool okSubs = await CreateContainerAsync(_appName, ContSubs);
+
+            if (!okGolos || !okCartoes || !okSubs)
             {
-                MessageBox.Show("Application criada, mas falhou a criação do container 'eventos'.");
+                MessageBox.Show("Application criada, mas falhou a criação de um dos containers (golos/cartoes/substituicoes).");
                 _appName = null;
                 btnIniciarJogo.Enabled = true;
                 return;
@@ -123,7 +129,7 @@ namespace AppArbitro
                     equipa = f.Data.Equipa
                 };
 
-                bool ok = await PublishEventAsync(ciName, payload);
+                bool ok = await PublishEventAsync(ContGolos, ciName, payload);
                 if (ok) MessageBox.Show($"Golo assinalado: {ciName}");
             }
         }
@@ -151,7 +157,7 @@ namespace AppArbitro
                     equipa = f.Result.Equipa
                 };
 
-                bool ok = await PublishEventAsync(ciName, payload);
+                bool ok = await PublishEventAsync(ContCartoes, ciName, payload);
                 if (ok) MessageBox.Show($"Cartão atribuído: {ciName}");
             }
         }
@@ -179,7 +185,7 @@ namespace AppArbitro
                     equipa = f.Result.Equipa
                 };
 
-                bool ok = await PublishEventAsync(ciName, payload);
+                bool ok = await PublishEventAsync(ContSubs, ciName, payload);
                 if (ok) MessageBox.Show($"Substituição realizada: {ciName}");
             }
         }
@@ -302,7 +308,7 @@ namespace AppArbitro
             return false;
         }
 
-        private async System.Threading.Tasks.Task<bool> PublishEventAsync(string ciName, object payloadObj)
+        private async System.Threading.Tasks.Task<bool> PublishEventAsync(string contName, string ciName, object payloadObj)
         {
             var client = MakeClient();
             string payloadJson = JsonConvert.SerializeObject(payloadObj);
@@ -314,14 +320,14 @@ namespace AppArbitro
                 Content = payloadJson
             };
 
-            var req = new RestRequest($"api/somiod/{_appName}/{ContainerName}", Method.Post);
+            var req = new RestRequest($"api/somiod/{_appName}/{contName}", Method.Post);
             req.AddJsonBody(body);
 
             var res = await client.ExecuteAsync(req);
 
             if (res.IsSuccessful) return true;
 
-            MessageBox.Show($"Falha a publicar evento {ciName}.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
+            MessageBox.Show($"Falha a publicar evento {ciName} em '{contName}'.\nHTTP {(int)res.StatusCode} {res.StatusCode}\n{res.Content}");
             return false;
         }
 
@@ -334,18 +340,20 @@ namespace AppArbitro
 
                 // apagar golos
                 for (int i = 1; i <= _golos; i++)
-                    await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContainerName}/golo{i}", Method.Delete));
+                    await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContGolos}/golo{i}", Method.Delete));
 
                 // apagar cartões
                 for (int i = 1; i <= _cartoes; i++)
-                    await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContainerName}/cartao{i}", Method.Delete));
+                    await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContCartoes}/cartao{i}", Method.Delete));
 
                 // apagar substituições
                 for (int i = 1; i <= _subs; i++)
-                    await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContainerName}/sub{i}", Method.Delete));
+                    await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContSubs}/sub{i}", Method.Delete));
 
                 // 2) apagar container
-                await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContainerName}", Method.Delete));
+                await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContGolos}", Method.Delete));
+                await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContCartoes}", Method.Delete));
+                await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}/{ContSubs}", Method.Delete));
 
                 // 3) apagar application
                 var res = await client.ExecuteAsync(new RestRequest($"api/somiod/{appName}", Method.Delete));
