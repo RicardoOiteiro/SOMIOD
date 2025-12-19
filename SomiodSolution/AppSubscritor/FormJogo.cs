@@ -150,17 +150,6 @@ namespace AppSubscritor
         }
 
 
-        private void ValidateXDocument(XDocument doc, string xsdPath)
-        {
-            var schemas = new XmlSchemaSet();
-            schemas.Add("", xsdPath);
-
-            string err = null;
-            doc.Validate(schemas, (o, e) => err = e.Message, true);
-
-            if (err != null)
-                throw new Exception("XML inválido: " + err);
-        }
 
 
 
@@ -229,7 +218,6 @@ namespace AppSubscritor
 
             doc.Root.Add(evEl);
 
-            // ✅ VALIDAÇÃO FINAL (FASE 6)
             string xsdPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "jogo.xsd"
@@ -277,18 +265,8 @@ namespace AppSubscritor
                             Cartao = TryGetString(contentDoc, "cartao")
                         };
 
-                        // mete caminho correto
-                        // se o xsd estiver no output, podes usar: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "evento.xsd")
-
-                        
-
 
                         AppendEventoToGameXml(_appName, eventoXml);
-
-                        
-
-
-
 
                         if (string.Equals(tipo.Trim(), "substituicao"))
                         {

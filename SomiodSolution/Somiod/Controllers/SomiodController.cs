@@ -26,7 +26,6 @@ namespace Somiod.Controllers
         [Route("{appName}")]
         public IHttpActionResult GetApplication(string appName)
         {
-            //é discovery?
             var hasHeader = Request.Headers.Contains("somiod-discovery");
             var headerValue = hasHeader ? Request.Headers.GetValues("somiod-discovery").FirstOrDefault() : null;
 
@@ -45,7 +44,6 @@ namespace Somiod.Controllers
                 return BadRequest("somiod-discovery deve ser: container | content-instance | subscription");
             }
 
-            // GET APPLICATION normal 
             Application app = null;
             SqlConnection connApp = null;
 
@@ -133,7 +131,7 @@ namespace Somiod.Controllers
 
                 conn.Close();
 
-                //return Ok("Aplicação inserida com sucesso!");
+
                 var location = new Uri(Request.RequestUri, $"api/somiod/{app.ResourceName}");
                 return Created(location, app);
             }
@@ -680,17 +678,12 @@ namespace Somiod.Controllers
 
         private void NotifySubscribers(string appName, string contName, ContentInstances ci, int evt)
         {
-            //para cada subscription:
-            //      - se for MQTT → publish
-            //      - se for HTTP → HTTP POST
-            Debug.WriteLine($"[Notify] Entrei no NotifySubscribers para {appName}/{contName}, evt={evt}");
             SqlConnection conn = null;
             try
             {
                 conn = new SqlConnection(connectionString);
                 conn.Open();
 
-                // ir buscar subscriptions do container com o evt correto
                 SqlCommand cmd = new SqlCommand(
                             @"SELECT s.ResourceName, s.Evt, s.Endpoint
                     FROM Subscriptions s
@@ -719,19 +712,15 @@ namespace Somiod.Controllers
 
                 reader.Close();
                 conn.Close();
-                Debug.WriteLine($"[Notify] Encontrei {subs.Count} subscriptions.");
 
                 // decidir se é MQTT ou HTTP (para cada sub)
                 foreach (var sub in subs)
                 {
-                    Debug.WriteLine($"[Notify] Endpoint recebido: '{sub.Endpoint}'");
 
                     var endpoint = sub.Endpoint.Trim();
-                    Debug.WriteLine($"[Notify] StartsWith mqtt:// ? {endpoint.StartsWith("mqtt://", StringComparison.OrdinalIgnoreCase)}");
 
                     if (endpoint.StartsWith("mqtt://", StringComparison.OrdinalIgnoreCase))
                     {
-                        Debug.WriteLine("[Notify] Enviando notificação MQTT...");
                         SendMqttNotification(appName, contName, ci, evt, sub);   // podes até passar o endpoint limpo se quiseres
                     }
                     else if (endpoint.StartsWith("http", StringComparison.OrdinalIgnoreCase))
@@ -745,10 +734,9 @@ namespace Somiod.Controllers
                 if (conn != null && conn.State == System.Data.ConnectionState.Open)
                     conn.Close();
 
-                Debug.WriteLine("[Notify][SQL ERROR] " + ex.Message);
                 foreach (SqlError err in ex.Errors)
                 {
-                    Debug.WriteLine("  -> " + err.Message);
+                    Console.WriteLine("  -> " + err.Message);
                 }
 
                 throw;
@@ -757,7 +745,6 @@ namespace Somiod.Controllers
         }
         private void SendMqttNotification(string appName, string contName, ContentInstances ci, int evt, Subscriptions sub)
         {
-            Debug.WriteLine(">>> ENTROU NO MQTT-TEST <<<");
 
             var client = new MqttClient(IPAddress.Parse("54.36.178.49"));
             string clientId = Guid.NewGuid().ToString();
@@ -765,17 +752,15 @@ namespace Somiod.Controllers
 
             if (!endpoint.StartsWith("mqtt://", StringComparison.OrdinalIgnoreCase))
             {
-                Debug.WriteLine("[MQTT] Endpoint NÃO é MQTT.");
                 return;
             }
 
             // Extrair o tópico (retira mqtt://)
             string topic = endpoint.Substring("mqtt://".Length);
             client.Connect(clientId);
-            Debug.WriteLine("MQTT Connected? " + client.IsConnected);
 
             if (!client.IsConnected)
-                Debug.WriteLine("Não ligou ao broker");
+                Console.WriteLine("Não ligou ao broker");
 
             
             var payloadObj = new
@@ -796,12 +781,6 @@ namespace Somiod.Controllers
                 MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE,
                 true
             );
-
-            Debug.WriteLine($"MQTT Published to '{topic}': {msg}");
-
-
-
-            Debug.WriteLine("MQTT TEST DONE");
             
         }
 

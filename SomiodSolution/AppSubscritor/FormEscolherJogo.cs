@@ -50,14 +50,7 @@ namespace AppSubscritor
         {
          
             String Jogo = labelSelectedGame.Text;
-            
-           
-            // Remove numeração "1. "
-    
-
-            // Abrir o Form do jogo
             var formJogo = new FormJogo(Jogo);
-            //var formJogo = new FormJogo(appName);
             formJogo.Show();
 
             
